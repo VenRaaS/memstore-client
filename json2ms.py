@@ -16,6 +16,18 @@ rds = redis.StrictRedis(host='10.0.0.3', port=6379)
 expire_sec_mpv = Value('i', 864)
 
 
+def rds_get(k):
+    global rds
+    
+    rt = None
+    try:
+        rt = rds.get(k)
+    except Exception as e:
+        logging.error(e, exc_info=True)
+
+    return rt
+
+
 def rds_setex(t_kv):
     global rds
     
@@ -86,9 +98,10 @@ if '__main__' == __name__:
             keys.append(k)
             vals.append(v)
     
-            if i_line % 20000 == 0:
+            if i_line % 30000 == 0:
                 tKB_list = zip(keys, vals)
                 pool.map(rds_setex, tKB_list)
+#                pool.map(rds_get, keys)
 
                 keys = []
                 vals = []
