@@ -47,20 +47,22 @@ if '__main__' == __name__:
 
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
-    parser.add_argument("-c", "--{}".format(jkey_c), help="source json key represents code name, default: {}".format(jkey_c))
-    parser.add_argument("-t", "--{}".format(jkey_t), help="source json key represents table/mode name, default: {}".format(jkey_t))
-    parser.add_argument("-i", "--{}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {}".format(jkey_i))
-    parser.add_argument("-v", "--{}".format(jkey_v), help="source json key represents rule/recomd list, default: {}".format(jkey_v))
+    parser.add_argument("-c", default="{}".format(jkey_c), help="source json key represents code name, default: {}".format(jkey_c))
+    parser.add_argument("-t", default="{}".format(jkey_t), help="source json key represents table/mode name, default: {}".format(jkey_t))
+    parser.add_argument("-i", default="{}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {}".format(jkey_i))
+    parser.add_argument("-v", default="{}".format(jkey_v), help="source json key represents rule/recomd list, default: {}".format(jkey_v))
+    parser.add_argument("-ttl", default=86400, help="live time of keys, default: {} seconds".format(86400))
     args = parser.parse_args()
 
-    if getattr(args, jkey_c): jkey_c = getattr(args, jkey_c)
-    if getattr(args, jkey_t): jkey_t = getattr(args, jkey_t)
-    if getattr(args, jkey_i): jkey_i = getattr(args, jkey_i)
-    if getattr(args, jkey_v): jkey_v = getattr(args, jkey_v)
-#    print jkey_c
-#    print jkey_t
-#    print jkey_i
-#    print jkey_v
+    jkey_c = args.c 
+    jkey_t = args.t
+    jkey_i = args.i
+    jkey_v = args.v
+    if args.ttl: expire_sec_mpv.value = args.ttl
+    logging.info('combo key: ${}.${}.${}'.format(jkey_c, jkey_t, jkey_i))
+    logging.info('value key: {}'.format(jkey_v))
+    logging.info('ttl: {}'.format(args.ttl))
+    exit()
   
     logging.info('{} counting ...'.format(args.src_fp))
     size_src = 0.0
