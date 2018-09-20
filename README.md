@@ -3,7 +3,7 @@
 
 ## Clinet
 
-### Talking to redis through netcat
+### [Netcat](https://en.wikipedia.org/wiki/Netcat)
 `nc -v ${HOST} ${PORT}`
 
 ## Reference
