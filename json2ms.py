@@ -102,8 +102,10 @@ def batch_sync_file(rds, args) :
     logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_i))
     logging.info('value key: {0}'.format(jkey_v))
     logging.info('ttl: {0}'.format(args.ttl))
-    logging.info('{} counting ...'.format(args.src_fp))
+    logging.info('command: {0}'.format(args.cmd))
+    exit()
 
+    logging.info('{} counting ...'.format(args.src_fp))
     size_src = 0.0
     with open(args.src_fp, 'r') as f:
         for i, l in enumerate(f):
@@ -165,6 +167,7 @@ if '__main__' == __name__:
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
     parser_bat = subparsers.add_parser("batch", help="sync file all at once")
+    parser_bat.add_argument("cmd", default="set", help="set, rpush")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
     parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {0}".format(jkey_i))
