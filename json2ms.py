@@ -157,6 +157,14 @@ def batch_sync_file(rds, args) :
     logging.info('{:.0f} {:.0f}%'.format(size_src, 100.0))
 
 
+from enum import Enum
+class RedisCommand(Enum):
+    set = 'set'
+    rpush = 'rpush'
+
+    def __str__(self):
+        return self.value
+
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
@@ -167,7 +175,7 @@ if '__main__' == __name__:
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
     parser_bat = subparsers.add_parser("batch", help="sync file all at once")
-    parser_bat.add_argument("cmd", default="set", help="set, rpush")
+    parser_bat.add_argument('cmd', type=RedisCommand, choices=list(RedisCommand), help="redis commands: set, rpush")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
     parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {0}".format(jkey_i))
@@ -180,5 +188,5 @@ if '__main__' == __name__:
  
     args = parser.parse_args()
     args.func(rds, args)
-  
 
+ 
