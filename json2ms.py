@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelna
 rds = redis.StrictRedis(host='10.0.0.3', port=6379)
 
 #TODO paramtize expire_sec_mpv
-expire_sec_mpv = Value('i', 864)
+expire_sec_mpv = Value('i', 0)
 
 
 
@@ -30,12 +30,16 @@ def rds_get(k):
     return rt
 
 
-def rds_setex(t_kv):
+def rds_set(t_kv):
     global rds
     
     try:
         key, value = t_kv
-        rds.setex(key, expire_sec_mpv.value, value)
+
+        if expire_sec_mpv.value:
+            rds.setex(key, expire_sec_mpv.value, value)
+        else:
+            rds.set(key, value)
 
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -98,12 +102,12 @@ def batch_sync_file(rds, args) :
     jkey_t = args.t
     jkey_i = args.i
     jkey_v = args.v
-    if args.ttl: expire_sec_mpv.value = args.ttl
     logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_i))
     logging.info('value key: {0}'.format(jkey_v))
     logging.info('ttl: {0}'.format(args.ttl))
-    logging.info('command: {0}'.format(args.cmd))
-    exit()
+    logging.info('command: {0}'.format(args.cmd_redis))
+    if args.ttl: 
+        expire_sec_mpv.value = args.ttl
 
     logging.info('{} counting ...'.format(args.src_fp))
     size_src = 0.0
@@ -143,8 +147,7 @@ def batch_sync_file(rds, args) :
     
             if i_line % 30000 == 0:
                 tKB_list = zip(keys, vals)
-                pool.map(rds_setex, tKB_list)
-#                pool.map(rds_get, keys)
+                pool.map(rds_set, tKB_list)
 
                 keys = []
                 vals = []
@@ -152,7 +155,8 @@ def batch_sync_file(rds, args) :
                 logging.info('{:.0f} {:.0f}%'.format(i_line, i_line / size_src * 100))
             
         tKB_list = zip(keys, vals)
-        pool.map(rds_setex, tKB_list)
+        if RedisCommand.set == args.cmd_redis:
+            pool.map(rds_set, tKB_list)
 
     logging.info('{:.0f} {:.0f}%'.format(size_src, 100.0))
 
@@ -175,12 +179,12 @@ if '__main__' == __name__:
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
     parser_bat = subparsers.add_parser("batch", help="sync file all at once")
-    parser_bat.add_argument('cmd', type=RedisCommand, choices=list(RedisCommand), help="redis commands: set, rpush")
+    parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands: set, rpush")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
     parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {0}".format(jkey_i))
     parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents rule/recomd list, default: {0}".format(jkey_v))
-    parser_bat.add_argument("-ttl", default=86400, help="live time of keys, default: {0} seconds".format(86400))
+    parser_bat.add_argument("-ttl", type=int, help='live time of keys')
     parser_bat.set_defaults(func = batch_sync_file)
 
     parser_tail = subparsers.add_parser("tail", help="sync once file grows")
