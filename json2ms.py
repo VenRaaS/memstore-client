@@ -147,7 +147,8 @@ def batch_sync_file(rds, args) :
     
             if i_line % 30000 == 0:
                 tKB_list = zip(keys, vals)
-                pool.map(rds_set, tKB_list)
+                if RedisCommand.set == args.cmd_redis:
+                    pool.map(rds_set, tKB_list)
 
                 keys = []
                 vals = []
@@ -168,6 +169,7 @@ class RedisCommand(Enum):
 
     def __str__(self):
         return self.value
+
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
