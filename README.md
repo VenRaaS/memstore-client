@@ -27,6 +27,7 @@
 * [Lists](https://redis.io/topics/data-types#lists)
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
+  * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [https://redis.io/commands/ltrim](https://redis.io/commands/ltrim)
 
 ## Reference
