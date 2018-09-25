@@ -29,7 +29,7 @@
   * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
   * [KEYS pattern](https://redis.io/commands/keys)
   
-* [Lists](https://redis.io/topics/data-types#lists)
+* [Lists](https://redis.io/topics/data-types#lists) - Redis lists are implemented via Linked Lists
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
   * [LRANGE key start stop](https://redis.io/commands/lrange)
