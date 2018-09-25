@@ -6,7 +6,7 @@
 ### [Netcat](https://en.wikipedia.org/wiki/Netcat)
 `nc -v ${HOST} ${PORT}`
 
-### [redis-cli]
+### [redis-cli](https://redis.io/topics/rediscli)
 `apt-get install redis-tools` for installation on Ubuntu
 
 
