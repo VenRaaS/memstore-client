@@ -26,6 +26,8 @@
 * [Redis keys](https://redis.io/topics/data-types-intro#redis-keys)
   * [EXPIRE key seconds](https://redis.io/commands/expire)
   * [TTL key](https://redis.io/commands/ttl)
+  * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
+  * [KEYS pattern](https://redis.io/commands/keys)
   
 * [Lists](https://redis.io/topics/data-types#lists)
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
