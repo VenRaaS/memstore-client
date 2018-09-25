@@ -1,10 +1,14 @@
 ## Overview
 ![](https://drive.google.com/uc?id=1vpKtOSOKpR1yBDXW1_BWCxzfo2GX2U9h)
 
-## Clinet
+## Client
 
 ### [Netcat](https://en.wikipedia.org/wiki/Netcat)
 `nc -v ${HOST} ${PORT}`
+
+### [redis-cli]
+`apt-get install redis-tools` for installation on Ubuntu
+
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
