@@ -23,8 +23,9 @@
   * [SET key value](https://redis.io/commands/set)
   * [GET key](https://redis.io/commands/get)
   * [APPEND key value](https://redis.io/commands/append)
+  
 * [Lists](https://redis.io/topics/data-types#lists)
-
+  * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
