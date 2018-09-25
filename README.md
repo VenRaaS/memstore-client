@@ -1,6 +1,9 @@
 ## Overview
 ![](https://drive.google.com/uc?id=1vpKtOSOKpR1yBDXW1_BWCxzfo2GX2U9h)
 
+## Why we need [memorystore](https://cloud.google.com/memorystore/)
+
+
 ## Client
 
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
@@ -14,7 +17,7 @@
 
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
-## Data type
+## Data type and commands
 
 
 ## Reference
