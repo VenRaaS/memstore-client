@@ -18,6 +18,7 @@
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ## Data type and commands
+* [Redis keys](https://redis.io/topics/data-types-intro#redis-keys)
 
 * [Strings](https://redis.io/topics/data-types#strings)
   * [SET key value](https://redis.io/commands/set)
