@@ -13,17 +13,30 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelna
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 rds = redis.StrictRedis(host='10.0.0.3', port=6379)
 
-#TODO paramtize expire_sec_mpv
 expire_sec_mpv = Value('i', 0)
 
 
-
-def rds_get(k):
+def rds_append(t_kv):
     global rds
     
     rt = None
     try:
+        k, v = t_kv
+        rt = rds.append(k, '{v},'.format(v=v))
+    except Exception as e:
+        logging.error(e, exc_info=True)
+
+    return rt
+
+
+def rds_get(t_kv):
+    global rds
+    
+    rt = None
+    try:
+        k, v = t_kv
         rt = rds.get(k)
+#        print rt
     except Exception as e:
         logging.error(e, exc_info=True)
 
@@ -34,12 +47,12 @@ def rds_set(t_kv):
     global rds
     
     try:
-        key, value = t_kv
+        k, v = t_kv
 
         if expire_sec_mpv.value:
-            rds.setex(key, expire_sec_mpv.value, value)
+            rds.setex(k, expire_sec_mpv.value, v)
         else:
-            rds.set(key, value)
+            rds.set(k, v)
 
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -116,7 +129,7 @@ def batch_sync_file(rds, args) :
             size_src = i
             pass
     size_src += 1.0
-    logging.info('{} has {:.0f} item ruls'.format(args.src_fp, size_src))
+    logging.info('{} has {:.0f} records'.format(args.src_fp, size_src))
 
     pool = Pool(processes = 512)
     
@@ -145,25 +158,35 @@ def batch_sync_file(rds, args) :
             keys.append(k)
             vals.append(v)
     
-            if i_line % 30000 == 0:
+            if i_line % 30000 == 0 or size_src == i_line :
                 tKB_list = zip(keys, vals)
-                if RedisCommand.set == args.cmd_redis:
+                if RedisCommand.append == args.cmd_redis:
+                    pool.map(rds_append, tKB_list)
+                elif RedisCommand.set == args.cmd_redis:
                     pool.map(rds_set, tKB_list)
+                elif RedisCommand.get == args.cmd_redis:
+                    pool.map(rds_get, tKB_list)
 
                 keys = []
                 vals = []
 
                 logging.info('{:.0f} {:.0f}%'.format(i_line, i_line / size_src * 100))
             
-        tKB_list = zip(keys, vals)
-        if RedisCommand.set == args.cmd_redis:
-            pool.map(rds_set, tKB_list)
+#        tKB_list = zip(keys, vals)
+#        if RedisCommand.append == args.cmd_redis:
+#            pool.map(rds_append, tKB_list)
+#        elif RedisCommand.set == args.cmd_redis:
+#            pool.map(rds_set, tKB_list)
+#        elif RedisCommand.get == args.cmd_redis:
+#            pool.map(rds_get, tKB_list)
 
     logging.info('{:.0f} {:.0f}%'.format(size_src, 100.0))
 
 
 from enum import Enum
 class RedisCommand(Enum):
+    append = 'append'
+    get = 'get'
     set = 'set'
     rpush = 'rpush'
 
