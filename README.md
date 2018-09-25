@@ -14,6 +14,8 @@
 
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
+## Data type
+
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
