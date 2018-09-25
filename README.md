@@ -18,13 +18,14 @@
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ## Data type and commands
-* [Redis keys](https://redis.io/topics/data-types-intro#redis-keys)
-
 * [Strings](https://redis.io/topics/data-types#strings)
   * [SET key value](https://redis.io/commands/set)
   * [GET key](https://redis.io/commands/get)
   * [APPEND key value](https://redis.io/commands/append)
   
+* [Redis keys](https://redis.io/topics/data-types-intro#redis-keys)
+  * [EXPIRE key seconds](https://redis.io/commands/expire)
+  * [TTL key](https://redis.io/commands/ttl)
 * [Lists](https://redis.io/topics/data-types#lists)
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
