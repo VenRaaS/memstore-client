@@ -19,6 +19,10 @@
 
 ## Data type and commands
 
+* [Strings](https://redis.io/topics/data-types#strings)
+  * [SET key value](https://redis.io/commands/set)
+  *  append
+
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
