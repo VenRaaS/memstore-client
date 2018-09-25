@@ -27,6 +27,7 @@
 * [Lists](https://redis.io/topics/data-types#lists)
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
+  * [https://redis.io/commands/ltrim](https://redis.io/commands/ltrim)
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
