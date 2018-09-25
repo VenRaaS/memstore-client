@@ -7,7 +7,8 @@
 `nc -v ${HOST} ${PORT}`
 
 ### [redis-cli](https://redis.io/topics/rediscli)
-`apt-get install redis-tools` for installation on Ubuntu
+* installation under Ubuntu  
+  `apt-get install redis-tools` 
 
 
 ## Reference
