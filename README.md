@@ -28,7 +28,7 @@
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
   * [LRANGE key start stop](https://redis.io/commands/lrange)
-  * [https://redis.io/commands/ltrim](https://redis.io/commands/ltrim)
+  * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
