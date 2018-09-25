@@ -21,7 +21,8 @@
 
 * [Strings](https://redis.io/topics/data-types#strings)
   * [SET key value](https://redis.io/commands/set)
-  *  append
+  * [GET key](https://redis.io/commands/get)
+  * [APPEND key value](https://redis.io/commands/append)
 
 
 ## Reference
