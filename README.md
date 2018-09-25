@@ -3,7 +3,7 @@
 
 ## Client
 
-### [Netcat](https://en.wikipedia.org/wiki/Netcat)
+### [netcat](https://en.wikipedia.org/wiki/Netcat)
 `nc -v ${HOST} ${PORT}`
 
 ### [redis-cli](https://redis.io/topics/rediscli)
