@@ -28,6 +28,7 @@
   * [TTL key](https://redis.io/commands/ttl)
   * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
   * [KEYS pattern](https://redis.io/commands/keys)
+  * [FLUSHALL](https://redis.io/commands/flushall)
   
 * [Lists](https://redis.io/topics/data-types#lists) - [Redis lists are implemented via Linked Lists](https://redis.io/topics/data-types-intro#redis-lists)
   * [LPUSH key value [value ...]](https://redis.io/commands/lpush)
