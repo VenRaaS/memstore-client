@@ -10,7 +10,7 @@
 * installation under Ubuntu  
   `apt-get install redis-tools`
   
-`redis-cli -h 10.0.0.3  -p 6379`
+`redis-cli -h ${HOST} -p 6379`
 
 
 ## Reference
