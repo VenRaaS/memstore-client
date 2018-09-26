@@ -195,10 +195,12 @@ def batch_sync_file(rds, args) :
 
 
 ###
-## mass insertion
-## see https://redis.io/topics/mass-insert
+## pipelining
+## see https://github.com/andymccurdy/redis-py#pipelines,
+##     https://redis.io/topics/pipelining,
+##     https://redis.io/topics/mass-insert
 ##
-def mass_sync_file(rds, args) :
+def pipe_sync_file(rds, args) :
     jkey_c = args.c 
     jkey_t = args.t
     jkey_i = args.i
@@ -219,8 +221,7 @@ def mass_sync_file(rds, args) :
     size_src += 1.0
     logging.info('{} has {:.0f} records'.format(args.src_fp, size_src))
 
-#    with tempfile.NamedTemporaryFile() as tf:
-    with tempfile.NamedTemporaryFile(delete=False) as tf:
+    with rds.pipeline(transaction=False) as pipe:
         with open(args.src_fp, 'r') as f:
             for i_line, l in enumerate(f):
                 j = json.loads(l)
@@ -241,25 +242,20 @@ def mass_sync_file(rds, args) :
                 k = '{c}_{ic}.{t}.{f}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], f=jkey_i, i=j[jkey_i])
                 v = j[jkey_v]
 
-                tf.write('*3\r\n')
-                tf.write('${l}\r\n'.format(l = len(args.cmd_redis.name)))
-                tf.write('{cmd}\r\n'.format(cmd = args.cmd_redis.name))
-                tf.write('${l}\r\n'.format(l = len(k)))
-                tf.write('{k}\r\n'.format(k = k))
-                tf.write('${l}\r\n'.format(l = len(v)))
-                tf.write('{v}\r\n'.format(v = v))
+                if RedisCommand.append == args.cmd_redis:
+                    pipe.append(k, v)
+                elif RedisCommand.set == args.cmd_redis:
+                    pipe.set(k, v)
+                elif RedisCommand.get == args.cmd_redis:
+                    pipe.get(k)
+                elif RedisCommand.rpush == args.cmd_redis:
+                    pipe.rpush(k, v)
 
                 size = i_line + 1
                 if 1 == size or size % 30000 == 0 or size_src <= size:
+                    pipe.execute()
                     logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
 
-#        cmd = 'cat {fp} | redis-cli --pipe -h {h}'.format(fp=tf.name, h=HOST_RDS)
-        cmd = 'cat {fp} | nc -v {h} {p} > /dev/null'.format(fp=tf.name, h=HOST_RDS, p=PORT_RDS)
-        logging.info(cmd)
-
-        output = subprocess.check_output(cmd, shell=True)
-        logging.info(output)
-        
 
 from enum import Enum
 class IndexCategory(Enum):
@@ -300,7 +296,7 @@ if '__main__' == __name__:
     parser_bat.add_argument("-ttl", type=int, help='live time of keys')
     parser_bat.set_defaults(func = batch_sync_file)
 
-    parser_bat = subparsers.add_parser("mass", help="sync file all at once")
+    parser_bat = subparsers.add_parser("pipe", help="sync file all at once")
     parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser_bat.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
@@ -308,7 +304,7 @@ if '__main__' == __name__:
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents key/gid/item id, default: {0}".format(jkey_i))
     parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents value/rule/recomd content, default: {0}".format(jkey_v))
     parser_bat.add_argument("-ttl", type=int, help='live time of keys')
-    parser_bat.set_defaults(func = mass_sync_file)
+    parser_bat.set_defaults(func = pipe_sync_file)
 
     parser_tail = subparsers.add_parser("tail", help="sync once file grows")
     parser_tail.set_defaults(func = tail_sync_file)
