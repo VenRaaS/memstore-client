@@ -41,7 +41,12 @@
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
 ## Key schema for data access in Venraas
-* `${code_name}.${table_name}.${gid}`
+* `${code_name}_mod.${table_name}.${id}`
+* `${code_name}_opp.${table_name}.${id}`
+* `${code_name}_oua.${table_name}.${id}`
+* `${code_name}_gocc.${table_name}.${id}`
+
+where ${id} stands for gid, category_code, ...
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
