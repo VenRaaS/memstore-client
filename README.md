@@ -6,7 +6,7 @@
 ![](https://drive.google.com/uc?id=1OcIYJ02gqUM2AGCT3mgAGrL63DO0jc-d)
 
 ### Relieving the bottleneck 
-![](https://drive.google.com/uc?id=1fSJGWi8HRahDr2XW3Q_bKNqlkruCFtmQ)
+![](https://drive.google.com/uc?id=1_d9jLHZto8fZMqCAnqudNQFl5P4n1blZ)
 
 ## Client
 
