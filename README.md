@@ -44,7 +44,7 @@
 * `${code_name}_mod.${table_name}.${id}` => "id:score, ... "
 * `${code_name}_opp.${table_name}.${id}` => [json_action(t), json_action(t-1), ... ]
 * `${code_name}_oua.${table_name}.${id}` => [json, ... ]
-* ~~`${code_name}_gocc.${table_name}.${id}`
+* ~~${code_name}_gocc.${table_name}.${id}~~
 
 where ${id} stands for gid, category_code, ...
 
