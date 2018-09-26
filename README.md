@@ -6,7 +6,7 @@
 ![](https://drive.google.com/uc?id=1OcIYJ02gqUM2AGCT3mgAGrL63DO0jc-d)
 
 ### Relieving the bottleneck 
-![](https://drive.google.com/uc?id=1fSJGWi8HRahDr2XW3Q_bKNqlkruCFtmQ)
+![](https://drive.google.com/uc?id=1_d9jLHZto8fZMqCAnqudNQFl5P4n1blZ)
 
 ## Client
 
@@ -41,12 +41,12 @@
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
 ## Key and value schema for data access in Venraas
-* `${code_name}_mod.${table_name}.${id}` => "id:score, ... "
-* `${code_name}_opp.${table_name}.${id}` => [json_action(t), json_action(t-1), ... ]
-* `${code_name}_oua.${table_name}.${id}` => [json, ... ]
-* ~~${code_name}_gocc.${table_name}.${id}~~
+* `${code_name}_mod.${table_name}.${id_name}.${id}` => "id:score, ... "
+* `${code_name}_opp.${table_name}.${id_name}.${id}` => [json_action(t), json_action(t-1), ... ]
+* `${code_name}_oua.${table_name}.${id_name}.${id}` => [json, ... ]
+* `${code_name}_gocc.${table_name}.${id_name}.${id}` => "json"
 
-where ${id} stands for gid, category_code, ...
+where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
