@@ -40,7 +40,8 @@
   * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
-## Keys - 
+## Key schema for data access in Venraas
+* `${code_name}.${code_name}`
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
