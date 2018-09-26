@@ -43,6 +43,19 @@ def rds_get(t_kv):
     return rt
 
 
+def rds_rpush(t_kv):
+    global rds
+    
+    try:
+        k, v = t_kv
+        rds.rpush(k, v)
+        if expire_sec_mpv.value:
+            rds.expire(k, expire_sec_mpv.value)
+
+    except Exception as e:
+        logging.error(e, exc_info=True)
+
+
 def rds_set(t_kv):
     global rds
     
@@ -166,19 +179,13 @@ def batch_sync_file(rds, args) :
                     pool.map(rds_set, tKB_list)
                 elif RedisCommand.get == args.cmd_redis:
                     pool.map(rds_get, tKB_list)
+                elif RedisCommand.rpush == args.cmd_redis:
+                    pool.map(rds_rpush, tKB_list)
 
                 keys = []
                 vals = []
 
                 logging.info('{:.0f} {:.0f}%'.format(i_line, i_line / size_src * 100))
-            
-#        tKB_list = zip(keys, vals)
-#        if RedisCommand.append == args.cmd_redis:
-#            pool.map(rds_append, tKB_list)
-#        elif RedisCommand.set == args.cmd_redis:
-#            pool.map(rds_set, tKB_list)
-#        elif RedisCommand.get == args.cmd_redis:
-#            pool.map(rds_get, tKB_list)
 
     logging.info('{:.0f} {:.0f}%'.format(size_src, 100.0))
 
@@ -204,7 +211,7 @@ if '__main__' == __name__:
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
     parser_bat = subparsers.add_parser("batch", help="sync file all at once")
-    parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands: set, rpush")
+    parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
     parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {0}".format(jkey_i))
