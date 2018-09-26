@@ -22,7 +22,7 @@
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ## Data type and commands
-* [Strings](https://redis.io/topics/data-types#strings)
+* [Strings](https://redis.io/topics/data-types#strings) - Redis keys are binary safe, this means that you can use any binary sequence as a key
   * [SET key value](https://redis.io/commands/set)
   * [GET key](https://redis.io/commands/get)
   * [APPEND key value](https://redis.io/commands/append)
@@ -39,6 +39,8 @@
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
   * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
+
+## Keys - 
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
