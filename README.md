@@ -45,5 +45,6 @@
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
+  * [Google’s Cloud Memorystore for Redis is now generally available](https://techcrunch.com/2018/09/19/googles-cloud-memorystore-for-redis-is-now-generally-available/)
 * [Connecting to a Redis Instance from a Compute Engine VM](https://cloud.google.com/memorystore/docs/redis/connect-redis-instance-gce)
 
