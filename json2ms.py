@@ -16,6 +16,7 @@ rds = redis.StrictRedis(host='10.0.0.3', port=6379)
 expire_sec_mpv = Value('i', 0)
 
 
+
 def rds_append(t_kv):
     global rds
     
@@ -214,8 +215,8 @@ if '__main__' == __name__:
     parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
     parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
-    parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents gid/category/item/rule id, default: {0}".format(jkey_i))
-    parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents rule/recomd list, default: {0}".format(jkey_v))
+    parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents key/gid/category/rule/item id, default: {0}".format(jkey_i))
+    parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents value/rule/recomd content, default: {0}".format(jkey_v))
     parser_bat.add_argument("-ttl", type=int, help='live time of keys')
     parser_bat.set_defaults(func = batch_sync_file)
 
