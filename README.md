@@ -46,7 +46,7 @@
 * `${code_name}_oua.${table_name}.${id_name}.${id}` => [json, ... ]
 * `${code_name}_gocc.${table_name}.${id_name}.${id}`
 
-where ${id} stands for gid, category_code, ...
+where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
