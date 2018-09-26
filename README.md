@@ -2,10 +2,10 @@
 ![](https://drive.google.com/uc?id=1DsmJmeIIVFPmYGvf9rZ6f8xgNY1MitwI)
 
 ## Why we need [memorystore](https://cloud.google.com/memorystore/)
-###
+### Latency vs. Throughput with data tiers
 ![](https://drive.google.com/uc?id=1OcIYJ02gqUM2AGCT3mgAGrL63DO0jc-d)
 
-### 
+### Relieving the bottleneck 
 ![](https://drive.google.com/uc?id=1fSJGWi8HRahDr2XW3Q_bKNqlkruCFtmQ)
 
 ## Client
