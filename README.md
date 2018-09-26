@@ -22,7 +22,7 @@
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ## Data type and commands
-* [Strings](https://redis.io/topics/data-types#strings) 
+* [Strings](https://redis.io/topics/data-types#strings) - Redis Strings are binary safe.
   * [SET key value](https://redis.io/commands/set)
   * [GET key](https://redis.io/commands/get)
   * [APPEND key value](https://redis.io/commands/append)
