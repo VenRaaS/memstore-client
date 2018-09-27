@@ -4,8 +4,6 @@ import argparse
 import json
 import redis
 import threading
-import tempfile
-import subprocess
 from multiprocessing import Pool, Value
 
 
@@ -18,62 +16,6 @@ PORT_RDS = '6379'
 rds = redis.StrictRedis(host=HOST_RDS, port=6379)
 
 expire_sec_mpv = Value('i', 0)
-
-
-
-def rds_append(t_kv):
-    global rds
-    
-    rt = None
-    try:
-        k, v = t_kv
-        rt = rds.append(k, '{v},'.format(v=v))
-    except Exception as e:
-        logging.error(e, exc_info=True)
-
-    return rt
-
-
-def rds_get(t_kv):
-    global rds
-    
-    rt = None
-    try:
-        k, v = t_kv
-        rt = rds.get(k)
-#        print rt
-    except Exception as e:
-        logging.error(e, exc_info=True)
-
-    return rt
-
-
-def rds_rpush(t_kv):
-    global rds
-    
-    try:
-        k, v = t_kv
-        rds.rpush(k, v)
-        if expire_sec_mpv.value:
-            rds.expire(k, expire_sec_mpv.value)
-
-    except Exception as e:
-        logging.error(e, exc_info=True)
-
-
-def rds_set(t_kv):
-    global rds
-    
-    try:
-        k, v = t_kv
-
-        if expire_sec_mpv.value:
-            rds.setex(k, expire_sec_mpv.value, v)
-        else:
-            rds.set(k, v)
-
-    except Exception as e:
-        logging.error(e, exc_info=True)
 
 
 ###
@@ -128,72 +70,6 @@ def tail_sync_file(rds, args):
     tail_file(args.src_fp, pool_sync)
     
 
-def rtpool_sync_file(rds, args) :
-    jkey_c = args.c 
-    jkey_t = args.t
-    jkey_i = args.i
-    jkey_v = args.v
-    logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_i))
-    logging.info('value key: {0}'.format(jkey_v))
-    logging.info('ttl: {0}'.format(args.ttl))
-    logging.info('command: {0}'.format(args.cmd_redis))
-    if args.ttl: 
-        expire_sec_mpv.value = args.ttl
-
-    logging.info('{} counting ...'.format(args.src_fp))
-    size_src = 0.0
-    with open(args.src_fp, 'r') as f:
-        for i, l in enumerate(f):
-            size_src = i
-            pass
-    size_src += 1.0
-    logging.info('{} has {:.0f} records'.format(args.src_fp, size_src))
-
-    pool = Pool(processes = 512)
-   
-    with open(args.src_fp, 'r') as f:
-        keys = []
-        vals = []
-
-        for i_line, l in enumerate(f):
-            j = json.loads(l)
-
-            if not jkey_c in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, args.src_fp))
-                continue
-            if not jkey_t in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, args.src_fp))
-                continue
-            if not jkey_i in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_i, i_line, args.src_fp))
-                continue
-            if not jkey_v in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, args.src_fp))
-                continue
-
-            k = '{c}_{ic}.{t}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], i=j[jkey_i])
-            v = j[jkey_v]
-            keys.append(k)
-            vals.append(v)
-
-            size = i_line + 1
-            if 1 == size or size % 30000 == 0 or size_src <= size:
-                tKB_list = zip(keys, vals)
-                if RedisCommand.append == args.cmd_redis:
-                    pool.map(rds_append, tKB_list)
-                elif RedisCommand.set == args.cmd_redis:
-                    pool.map(rds_set, tKB_list)
-                elif RedisCommand.get == args.cmd_redis:
-                    pool.map(rds_get, tKB_list)
-                elif RedisCommand.rpush == args.cmd_redis:
-                    pool.map(rds_rpush, tKB_list)
-
-                keys = []
-                vals = []
-
-                logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
-
-
 ###
 ## pipelining
 ## see https://github.com/andymccurdy/redis-py#pipelines,
@@ -243,13 +119,15 @@ def pipe_sync_file(rds, args) :
                 v = j[jkey_v]
 
                 if RedisCommand.append == args.cmd_redis:
-                    pipe.append(k, v)
+                    pipe.append(k, '{_v},'.format(_v=v))
                 elif RedisCommand.set == args.cmd_redis:
                     pipe.set(k, v)
                 elif RedisCommand.get == args.cmd_redis:
                     pipe.get(k)
                 elif RedisCommand.rpush == args.cmd_redis:
                     pipe.rpush(k, v)
+                elif RedisCommand.lpush == args.cmd_redis:
+                    pipe.lpush(k, v)
 
                 size = i_line + 1
                 if 1 == size or size % 30000 == 0 or size_src <= size:
@@ -272,39 +150,30 @@ class RedisCommand(Enum):
     get = 'get'
     set = 'set'
     rpush = 'rpush'
+    lpush = 'lpush'
 
     def __str__(self):
         return self.value
 
-
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
-    subparsers = parser.add_subparsers(help='sub-command help')
 
     jkey_c = 'code_name'
     jkey_t = 'table_name'
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
-    parser_bat = subparsers.add_parser("rtpool", help="sync file with threads pool")
-    parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
-    parser_bat.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
-    parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
-    parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
-    parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents key/gid/item id, default: {0}".format(jkey_i))
-    parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents value/rule/recomd content, default: {0}".format(jkey_v))
-    parser_bat.add_argument("-ttl", type=int, help='live time of keys')
-    parser_bat.set_defaults(func = rtpool_sync_file)
+    parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
+    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
+    parser.add_argument("-c", default="{0}".format(jkey_c), help="source json key for code name, default: {0}".format(jkey_c))
+    parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
+    parser.add_argument("-i", default="{0}".format(jkey_i), help="source json key for key/gid/item id, default: {0}".format(jkey_i))
+    parser.add_argument("-v", default="{0}".format(jkey_v), help="source json key for value/rule content, default: {0}".format(jkey_v))
+    parser.add_argument("-ttl", type=int, help='live time of keys')
 
-    parser_bat = subparsers.add_parser("pipe", help="sync file all at once")
-    parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
-    parser_bat.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
-    parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
-    parser_bat.add_argument("-t", default="{0}".format(jkey_t), help="source json key represents table/mode name, default: {0}".format(jkey_t))
-    parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents key/gid/item id, default: {0}".format(jkey_i))
-    parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents value/rule/recomd content, default: {0}".format(jkey_v))
-    parser_bat.add_argument("-ttl", type=int, help='live time of keys')
-    parser_bat.set_defaults(func = pipe_sync_file)
+    subparsers = parser.add_subparsers(help='sub-command help')
+    parser_pipe = subparsers.add_parser("pipe", help="sync all file with pipelining")
+    parser_pipe.set_defaults(func = pipe_sync_file)
 
     parser_tail = subparsers.add_parser("tail", help="sync once file grows")
     parser_tail.set_defaults(func = tail_sync_file)
