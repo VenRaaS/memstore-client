@@ -128,7 +128,7 @@ def tail_sync_file(rds, args):
     tail_file(args.src_fp, pool_sync)
     
 
-def batch_sync_file(rds, args) :
+def rtpool_sync_file(rds, args) :
     jkey_c = args.c 
     jkey_t = args.t
     jkey_i = args.i
@@ -286,7 +286,7 @@ if '__main__' == __name__:
     jkey_t = 'table_name'
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
-    parser_bat = subparsers.add_parser("batch", help="sync file with threads pool")
+    parser_bat = subparsers.add_parser("rtpool", help="sync file with threads pool")
     parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser_bat.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser_bat.add_argument("-c", default="{0}".format(jkey_c), help="source json key represents code name, default: {0}".format(jkey_c))
@@ -294,7 +294,7 @@ if '__main__' == __name__:
     parser_bat.add_argument("-i", default="{0}".format(jkey_i), help="source json key represents key/gid/item id, default: {0}".format(jkey_i))
     parser_bat.add_argument("-v", default="{0}".format(jkey_v), help="source json key represents value/rule/recomd content, default: {0}".format(jkey_v))
     parser_bat.add_argument("-ttl", type=int, help='live time of keys')
-    parser_bat.set_defaults(func = batch_sync_file)
+    parser_bat.set_defaults(func = rtpool_sync_file)
 
     parser_bat = subparsers.add_parser("pipe", help="sync file all at once")
     parser_bat.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
