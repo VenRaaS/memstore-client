@@ -121,42 +121,45 @@ def pipe_sync_file(rds, args) :
             with rds.pipeline(transaction=False) as pipe:
                 with open(fn, 'r') as f:
                     for i_line, l in enumerate(f):
-                        j = json.loads(l)
+                        try:
+                            j = json.loads(l)
 
-                        if not jkey_c in j:
-                            logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, args.fn))
-                            continue
-                        if not jkey_t in j:
-                            logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, args.fn))
-                            continue
-                        if not jkey_i in j:
-                            logging.error('{} is not found at line:{} in {}'.format(jkey_i, i_line, args.fn))
-                            continue
-                        if not jkey_v in j:
-                            logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, args.fn))
-                            continue
+                            if not jkey_c in j:
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, args.fn))
+                                continue
+                            if not jkey_t in j:
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, args.fn))
+                                continue
+                            if not jkey_i in j:
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_i, i_line, args.fn))
+                                continue
+                            if not jkey_v in j:
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, args.fn))
+                                continue
 
-                        k = '{c}_{ic}.{t}.{f}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], f=jkey_i, i=j[jkey_i])
-                        v = j[jkey_v]
+                            k = '{c}_{ic}.{t}.{f}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], f=jkey_i, i=j[jkey_i])
+                            v = j[jkey_v]
 
-                        if RedisCommand.append == args.cmd_redis:
-                            pipe.append(k, '{_v},'.format(_v=v))
-                        elif RedisCommand.set == args.cmd_redis:
-                            pipe.set(k, v)
-                        elif RedisCommand.get == args.cmd_redis:
-                            pipe.get(k)
-                        elif RedisCommand.rpush == args.cmd_redis:
-                            pipe.rpush(k, v)
-                        elif RedisCommand.lpush == args.cmd_redis:
-                            pipe.lpush(k, v)
+                            if RedisCommand.append == args.cmd_redis:
+                                pipe.append(k, '{_v},'.format(_v=v))
+                            elif RedisCommand.set == args.cmd_redis:
+                                pipe.set(k, v)
+                            elif RedisCommand.get == args.cmd_redis:
+                                pipe.get(k)
+                            elif RedisCommand.rpush == args.cmd_redis:
+                                pipe.rpush(k, v)
+                            elif RedisCommand.lpush == args.cmd_redis:
+                                pipe.lpush(k, v)
 
-                        if args.ttl:
-                            pipe.expire(k, args.ttl)
+                            if args.ttl:
+                                pipe.expire(k, args.ttl)
 
-                        size = i_line + 1
-                        if 1 == size or size % 60000 == 0 or size_src <= size:
-                            pipe.execute()
-                            logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
+                            size = i_line + 1
+                            if 1 == size or size % 60000 == 0 or size_src <= size:
+                                pipe.execute()
+                                logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
 
         if not args.deamon:
             break
@@ -171,7 +174,7 @@ class FilesState:
         self.fname2state = {}
 
         for fn in self.fnames:
-            logging.info('{n} is collecting state ...'.format(n=fn))
+            logging.info('collecting {n} state ...'.format(n=fn))
             self.fname2state[fn] = {}
             self.fname2state[fn]['ino'] = os.stat(fn).st_ino
             self.fname2state[fn]['mtime'] = os.stat(fn).st_mtime
