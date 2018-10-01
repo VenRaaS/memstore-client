@@ -18,7 +18,10 @@ HOST_RDS = '10.0.0.3'
 PORT_RDS = '6379'
 rds = redis.StrictRedis(host=HOST_RDS, port=6379)
 
+SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC = 300
+
 expire_sec_mpv = Value('i', 0)
+
 
 
 ###
@@ -158,7 +161,7 @@ def pipe_sync_file(rds, args) :
         if not args.deamon:
             break
         
-        time.sleep(30)
+        time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
         new_state_files = FilesState(args.src_fpatt)
 
 
