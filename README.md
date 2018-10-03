@@ -31,7 +31,8 @@
   * [EXPIRE key seconds](https://redis.io/commands/expire)
   * [TTL key](https://redis.io/commands/ttl)
   * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
-  * [KEYS pattern](https://redis.io/commands/keys)
+  * [KEYS pattern](https://redis.io/commands/keys) 
+    * **notice that** you should always consider ```scan``` instead of ```keys``` to prevent block redis server.
   * [FLUSHALL](https://redis.io/commands/flushall)
   
 * [Lists](https://redis.io/topics/data-types#lists) - [Redis lists are implemented via Linked Lists](https://redis.io/topics/data-types-intro#redis-lists)
