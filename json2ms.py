@@ -95,7 +95,7 @@ def pipe_sync_file(rds, args) :
     logging.info('command: {0}'.format(args.cmd_redis))
     logging.info('deamon mode: {0}'.format(args.deamon))
 
-    state_files = FilesState(args.src_fpatt)
+    state_files = FilesState(args.src_fpatt, args.deamon)
     new_state_files = state_files 
     while True:
         for fn in new_state_files.get_fnames():
@@ -125,16 +125,16 @@ def pipe_sync_file(rds, args) :
                             j = json.loads(l)
 
                             if not jkey_c in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, args.fn))
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, fn))
                                 continue
                             if not jkey_t in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, args.fn))
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, fn))
                                 continue
                             if not jkey_i in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_i, i_line, args.fn))
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_i, i_line, fn))
                                 continue
                             if not jkey_v in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, args.fn))
+                                logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, fn))
                                 continue
 
                             k = '{c}_{ic}.{t}.{f}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], f=jkey_i, i=j[jkey_i])
@@ -165,11 +165,11 @@ def pipe_sync_file(rds, args) :
             break
         
         time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
-        new_state_files = FilesState(args.src_fpatt)
+        new_state_files = FilesState(args.src_fpatt, args.deamon)
 
 
 class FilesState:
-    def __init__(self, fpattern):
+    def __init__(self, fpattern, dohash=False):
         self.fnames = glob.glob(fpattern)
         self.fname2state = {}
 
@@ -178,7 +178,8 @@ class FilesState:
             self.fname2state[fn] = {}
             self.fname2state[fn]['ino'] = os.stat(fn).st_ino
             self.fname2state[fn]['mtime'] = os.stat(fn).st_mtime
-            self.fname2state[fn]['md5'] = subprocess.check_output(['md5sum', fn]).strip().split()[0]
+            if dohash:
+                self.fname2state[fn]['md5'] = subprocess.check_output(['md5sum', fn]).strip().split()[0]
 
     def get_fnames(self):
         return self.fnames
@@ -214,13 +215,13 @@ if '__main__' == __name__:
     jkey_t = 'table_name'
     jkey_i = 'id'
     jkey_v = 'indicators_raw'
-    parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
-    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser.add_argument("-c", default="{0}".format(jkey_c), help="source json key for code name, default: {0}".format(jkey_c))
     parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
     parser.add_argument("-i", default="{0}".format(jkey_i), help="source json key for key/gid/item id, default: {0}".format(jkey_i))
     parser.add_argument("-v", default="{0}".format(jkey_v), help="source json key for value/rule content, default: {0}".format(jkey_v))
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
+    parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
+    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
     subparsers = parser.add_subparsers(help='sub-command help')
