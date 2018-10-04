@@ -24,10 +24,10 @@ expire_sec_mpv = Value('i', 0)
 
 
 
-###
+##
 ## simulates the linux command, e.g. tail -F [file]
 ## see http://man7.org/linux/man-pages/man1/tail.1.html
-###
+##
 def tail_file(fname, cbf, seconds_sleep=1):
     cur_f = open(fname, 'r')
     cur_ino = os.fstat(cur_f.fileno()).st_ino
@@ -78,7 +78,7 @@ def tail_sync_file(rds, args):
     tail_file(args.src_fp, pool_sync)
     
 
-###
+##
 ## pipelining
 ## see https://github.com/andymccurdy/redis-py#pipelines,
 ##     https://redis.io/topics/pipelining,
@@ -88,9 +88,9 @@ def pipe_sync_file(rds, args) :
     jkey_c = args.c 
     jkey_t = args.t
     jkey_k = args.k
-    jkey_v = args.v
+    jkeys_vals = args.valkeys
     logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
-    logging.info('value key: {0}'.format(jkey_v))
+    logging.info('value key: {0}'.format(jkeys_vals))
     logging.info('ttl: {0}'.format(args.ttl))
     logging.info('command: {0}'.format(args.cmd_redis))
     logging.info('deamon mode: {0}'.format(args.deamon))
@@ -133,13 +133,18 @@ def pipe_sync_file(rds, args) :
                             if not jkey_k in j:
                                 logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line, fn))
                                 continue
-                            if '_all' != jkey_v and not jkey_v in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_v, i_line, fn))
-                                continue
+                            for vk in jkeys_vals:
+                                if not vk in j:
+                                    logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
+                                    continue
 
 #                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-                            k = '{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-                            v = l if '_all' == jkey_v else j[jkey_v]
+                            k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+
+                            d = {}
+                            for vk in jkeys_vals:
+                                d[vk] = j[vk]
+                            v = json.dumps(d)
 
                             if RedisCommand.append == args.cmd_redis:
                                 pipe.append(k, '{_v},'.format(_v=v))
@@ -215,11 +220,10 @@ if '__main__' == __name__:
     jkey_c = 'code_name'
     jkey_t = 'table_name'
     jkey_k = 'id'
-    jkey_v = '_all'
     parser.add_argument("-c", default="{0}".format(jkey_c), help="source json key for code name, default: {0}".format(jkey_c))
     parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
     parser.add_argument("-k", default="{0}".format(jkey_k), help="source json key for key/gid/item id, default: {0}".format(jkey_k))
-    parser.add_argument("-v", default="{0}".format(jkey_v), help="source json key for value/rule content, default: {0}".format(jkey_v))
+    parser.add_argument("-v", "--valkeys", action='append', required=True, help="source json key for value/rule content")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
@@ -245,7 +249,7 @@ if '__main__' == __name__:
                 sys.exit(0)
         except OSError as e:
             logging.error(e, exc_info=True)
-    
+ 
     args.func(rds, args)
 
  
