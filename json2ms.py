@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelna
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = '10.0.0.3'
 PORT_RDS = '6379'
-rds = redis.StrictRedis(host=HOST_RDS, port=6379)
+rds = redis.StrictRedis(host=HOST_RDS, port=6379) #, socket_connect_timeout=0.0)
 
 SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC = 300
 
@@ -78,6 +78,31 @@ def tail_sync_file(rds, args):
     tail_file(args.src_fp, pool_sync)
     
 
+def rds_pipe_worker(tri_list):
+    #-- disable the atomic nature of a pipeline
+    #   see https://github.com/andymccurdy/redis-py#pipelines
+    with rds.pipeline(transaction=False) as pipe:        
+        for args, k, v in tri_list:
+            if RedisCommand.append == args.cmd_redis:
+                pipe.append(k, '{_v},'.format(_v=v))
+            elif RedisCommand.set == args.cmd_redis:
+                pipe.set(k, v)
+            elif RedisCommand.get == args.cmd_redis:
+                pipe.get(k)
+            elif RedisCommand.rpush == args.cmd_redis:
+                pipe.rpush(k, v)
+            elif RedisCommand.lpush == args.cmd_redis:
+                pipe.lpush(k, v)
+
+            if args.ttl:
+                pipe.expire(k, args.ttl)
+
+            if args.ltrim:
+                pipe.ltrim(k, args.ltrim[0], args.ltrim[1])
+
+        pipe.execute()
+
+
 ##
 ## pipelining
 ## see https://github.com/andymccurdy/redis-py#pipelines,
@@ -120,6 +145,8 @@ def pipe_sync_file(rds, args) :
             #   see https://github.com/andymccurdy/redis-py#pipelines
             with rds.pipeline(transaction=False) as pipe:
                 with open(fn, 'r') as f:
+                    tri_list = []
+
                     for i_line, l in enumerate(f):
                         try:
                             j = json.loads(l)
@@ -138,7 +165,7 @@ def pipe_sync_file(rds, args) :
                                     logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
                                     continue
 
-#                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+    #                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
                             k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
 
                             d = {}
@@ -146,24 +173,14 @@ def pipe_sync_file(rds, args) :
                                 d[vk] = j[vk]
                             v = json.dumps(d)
 
-                            if RedisCommand.append == args.cmd_redis:
-                                pipe.append(k, '{_v},'.format(_v=v))
-                            elif RedisCommand.set == args.cmd_redis:
-                                pipe.set(k, v)
-                            elif RedisCommand.get == args.cmd_redis:
-                                pipe.get(k)
-                            elif RedisCommand.rpush == args.cmd_redis:
-                                pipe.rpush(k, v)
-                            elif RedisCommand.lpush == args.cmd_redis:
-                                pipe.lpush(k, v)
-
-                            if args.ttl:
-                                pipe.expire(k, args.ttl)
+                            tri_list.append((args, k, v))
 
                             size = i_line + 1
-                            if 1 == size or size % 60000 == 0 or size_src <= size:
-                                pipe.execute()
+                            if 1 == size or size % (60 * 1000) == 0 or size_src <= size:
+                                rds_pipe_worker(tri_list)
+                                tri_list = []
                                 logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
+
                         except Exception as e:
                             logging.error(e, exc_info=True)
 
@@ -227,6 +244,7 @@ if '__main__' == __name__:
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
+    parser.add_argument('-ltrim', nargs=2, type=int, help="ltrim start stop")
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
     subparsers = parser.add_subparsers(help='sub-command help')
@@ -250,6 +268,7 @@ if '__main__' == __name__:
         except OSError as e:
             logging.error(e, exc_info=True)
  
+#    print args
     args.func(rds, args)
 
  
