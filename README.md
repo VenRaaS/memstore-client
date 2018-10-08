@@ -31,7 +31,8 @@
   * [EXPIRE key seconds](https://redis.io/commands/expire)
   * [TTL key](https://redis.io/commands/ttl)
   * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
-    * [list of keys](https://redis.io/topics/rediscli#getting-a-list-of-keys)
+    * [list of keys](https://redis.io/topics/rediscli#getting-a-list-of-keys)  
+      `redis-cli -h $HOST --scan --pattern '*-11*'`
   * [KEYS pattern](https://redis.io/commands/keys) 
     * **notice that** you should always consider ```scan``` instead of ```keys``` to prevent block redis server.
   * [DEL key [key ...]](https://redis.io/commands/del)
