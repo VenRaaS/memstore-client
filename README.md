@@ -19,6 +19,8 @@
   
 `redis-cli -h ${HOST} -p 6379`
 
+### [jedis](https://github.com/xetorthio/jedis/wiki)
+
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ## Data type and commands
