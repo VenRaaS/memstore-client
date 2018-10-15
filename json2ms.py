@@ -160,17 +160,21 @@ def pipe_sync_file(rds, args) :
                             if not jkey_k in j:
                                 logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line, fn))
                                 continue
-                            for vk in jkeys_vals:
-                                if not vk in j:
-                                    logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
-                                    continue
 
-    #                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+                            if jkeys_vals:
+                                for vk in jkeys_vals:
+                                    if not vk in j:
+                                        logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
+                                        continue
+
+#                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
                             k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-
-                            d = {}
-                            for vk in jkeys_vals:
-                                d[vk] = j[vk]
+                            if jkeys_vals:
+                                d = {}
+                                for vk in jkeys_vals:
+                                    d[vk] = j[vk]
+                            else:
+                                d = j
                             v = json.dumps(d)
 
                             tri_list.append((args, k, v))
@@ -240,7 +244,7 @@ if '__main__' == __name__:
     parser.add_argument("-c", default="{0}".format(jkey_c), help="source json key for code name, default: {0}".format(jkey_c))
     parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
     parser.add_argument("-k", default="{0}".format(jkey_k), help="source json key for key/gid/item id, default: {0}".format(jkey_k))
-    parser.add_argument("-v", "--valkeys", action='append', required=True, help="source json key for value/rule content")
+    parser.add_argument("-v", "--valkeys", action='append', help="source json key for value/rule content, default: all")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
