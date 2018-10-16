@@ -55,11 +55,11 @@
 * `${code_name}_oua/${table_name}/_search?q=${id_name}:${id}` => [json, ... ]
 TODO
 ```
-/momo_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:1529466426110258566
+/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:009466
 [{"uid": "201008168544"}, ...]
-/momo_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:u001
-/momo_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:1529466426110258566
-/momo_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:1529466426110258566
+/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:u001
+/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:009466
+/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:009466
 ```
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
