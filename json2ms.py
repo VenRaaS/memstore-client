@@ -28,20 +28,25 @@ expire_sec_mpv = Value('i', 0)
 ## simulates the linux command, e.g. tail -F [file]
 ## see http://man7.org/linux/man-pages/man1/tail.1.html
 ##
-def tail_file(fname, cbf, seconds_sleep=1):
+def tail_file(args, cbf, seconds_sleep=1):     
+    fname = args.src_fp
     cur_f = open(fname, 'r')
     cur_ino = os.fstat(cur_f.fileno()).st_ino
-    cur_f.seek(0, os.SEEK_END)
+    
+    #-- start read position  
+    if args.startfromend:
+        cur_f.seek(0, os.SEEK_END)
     
     try:
         while True:
             while True:
-                lines = cur_f.readlines(5 * 1024 * 1024)
+                lines = cur_f.readlines(10 * 1024 * 1024)
+#                print lines                
                 cbf(lines)
-                time.sleep(seconds_sleep)
 
                 if not lines:
                     logging.info('EOF')
+                    time.sleep(seconds_sleep)
                     break
 
             try:
@@ -63,19 +68,25 @@ def tail_file(fname, cbf, seconds_sleep=1):
             cur_f.close()
 
 
-def opp_parser(lines):
+def weblog_td_parser(lines):
     for l in lines:
-        j = json.loads(l)
-        if 'code_name' not in j:
+        cols = l.split('\t')
+#        print cols[0]
+
+        j = json.loads(cols[-1])
+        if 'code_name' not in j or 'logbody' not in j:
             continue
-        if 'page_load' not in j:
-            continue
-            
+
+        act = j['action']
+        j = json.loads(j['logbody'])
+        j = json.loads(j[act][0])
+        print j
+
         exit()
 
 
 def tail_sync_file(rds, args):
-    tail_file(args.src_fp, pool_sync)
+    tail_file(args, weblog_td_parser)
     
 
 def rds_pipe_worker(tri_list):
@@ -120,7 +131,7 @@ def pipe_sync_file(rds, args) :
     logging.info('command: {0}'.format(args.cmd_redis))
     logging.info('deamon mode: {0}'.format(args.deamon))
 
-    state_files = FilesState(args.src_fpatt, args.deamon)
+    state_files = FilesState(args.src_fp, args.deamon)
     new_state_files = state_files 
     while True:
         for fn in new_state_files.get_fnames():
@@ -192,7 +203,7 @@ def pipe_sync_file(rds, args) :
             break
         
         time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
-        new_state_files = FilesState(args.src_fpatt, args.deamon)
+        new_state_files = FilesState(args.src_fp, args.deamon)
 
 
 class FilesState:
@@ -236,7 +247,7 @@ class RedisCommand(Enum):
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
-    parser.add_argument("src_fpatt", help="source file path")
+    parser.add_argument("src_fp", help="source file path")
 
     jkey_c = 'code_name'
     jkey_t = 'table_name'
@@ -257,6 +268,7 @@ if '__main__' == __name__:
 
     parser_tail = subparsers.add_parser("tail", help="sync once file grows")
     parser_tail.set_defaults(func = tail_sync_file)
+    parser_tail.add_argument('-se', '--startfromend', action='store_true', help='start sync from the new appending rows')
  
     args = parser.parse_args()
 
