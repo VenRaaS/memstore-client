@@ -33,7 +33,7 @@ def tail_file(args, cbf, seconds_sleep=1):
     cur_f = open(fname, 'r')
     cur_ino = os.fstat(cur_f.fileno()).st_ino
     
-    #-- start read position  
+    #-- move to start read position  
     if args.startfromend:
         cur_f.seek(0, os.SEEK_END)
     
@@ -42,7 +42,7 @@ def tail_file(args, cbf, seconds_sleep=1):
             while True:
                 lines = cur_f.readlines(10 * 1024 * 1024)
 #                print lines                
-                cbf(lines)
+                cbf(args, lines)
 
                 if not lines:
                     logging.info('EOF')
@@ -68,32 +68,69 @@ def tail_file(args, cbf, seconds_sleep=1):
             cur_f.close()
 
 
-def weblog_td_parser(lines):
-    for l in lines:
-        cols = l.split('\t')
-#        print cols[0]
+def weblog_td_parser(args, lines):
+    tuple_list = []
+    try:
+        for l in lines:
+            cols = l.split('\t')
+            js = json.loads(cols[-1])
+            if args.c not in js or 'logbody' not in js or 'action' not in js or 'logdt' not in js \
+                or not js[args.c] or not js['action'] or not js ['logdt']:
+                logging.error('invalid weblog due to lack of some basic k-v pairs')
+                continue
+            
+            cn = js[args.c]
+            act = js['action']
+            logdt = js ['logdt']
 
-        j = json.loads(cols[-1])
-        if 'code_name' not in j or 'logbody' not in j:
-            continue
+            js = json.loads(js['logbody'])
+            if act in js.keys():
+                js = json.loads(js[act][0])
 
-        act = j['action']
-        j = json.loads(j['logbody'])
-        j = json.loads(j[act][0])
-        print j
+                #-- oua
+                if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
+                    k = '/{c}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:{i}'.format(
+                        c = cn, i = js['ven_guid'])
+                    v = {'uid':js['uid']}
+                    tuple_list.append( (args, k, v, (0,6)) )
+                    k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
+                        c = cn, i = js['uid'])
+                    v = {'ven_guid':js['ven_guid']}
+                    tuple_list.append( (args, k, v, (0,6)) )
 
-        exit()
+                #-- opp 
+                if 'pageload' == act and 'ven_guid' in js \
+                    and 'gid' in js and 'categ_code' in js \
+                    and js['gid'] and js['categ_code']:
+                    k = '/{c}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:{i}'.format(
+                        c = cn, i = js['ven_guid'])
+                    v = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                    tuple_list.append( (args, k, v, (0,60)) )
 
+                #-- checkout
+                if 'checkout' == act \
+                    and 'trans_i' in js and js['trans_i'] \
+                    and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
+                    k = '/{c}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:{i}'.format(
+                        c = cn, i = js['ven_guid'])
+                    v = {'trans_i':js['trans_i']}
+                    tuple_list.append( (args, k, v, (0,10)) )
+
+        print len(tuple_list)
+        rds_pipe_worker(tuple_list)
+    except Exception as e:
+        logging.error(e, exc_info=True)
+ 
 
 def tail_sync_file(rds, args):
     tail_file(args, weblog_td_parser)
     
 
-def rds_pipe_worker(tri_list):
+def rds_pipe_worker(tuple_list):
     #-- disable the atomic nature of a pipeline
     #   see https://github.com/andymccurdy/redis-py#pipelines
     with rds.pipeline(transaction=False) as pipe:        
-        for args, k, v in tri_list:
+        for args, k, v, trim_s2s in tuple_list:
             if RedisCommand.append == args.cmd_redis:
                 pipe.append(k, '{_v},'.format(_v=v))
             elif RedisCommand.set == args.cmd_redis:
@@ -110,6 +147,8 @@ def rds_pipe_worker(tri_list):
 
             if args.ltrim:
                 pipe.ltrim(k, args.ltrim[0], args.ltrim[1])
+            elif trim_s2s:
+                pipe.ltrim(k, trim_s2s[0], trim_s2s[1])
 
         pipe.execute()
 
@@ -152,52 +191,53 @@ def pipe_sync_file(rds, args) :
             size_src += 1.0
             logging.info('{} has {:.0f} records'.format(fn, size_src))
 
-            #-- disable the atomic nature of a pipeline
-            #   see https://github.com/andymccurdy/redis-py#pipelines
-            with rds.pipeline(transaction=False) as pipe:
-                with open(fn, 'r') as f:
-                    tri_list = []
+            with open(fn, 'r') as f:
+                tuple_list = []
 
-                    for i_line, l in enumerate(f):
-                        try:
-                            j = json.loads(l)
+                for i_line, l in enumerate(f):
+                    try:
+                        j = json.loads(l)
 
-                            if not jkey_c in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, fn))
-                                continue
-                            if not jkey_t in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, fn))
-                                continue
-                            if not jkey_k in j:
-                                logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line, fn))
-                                continue
+                        if not jkey_c in j:
+                            logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, fn))
+                            continue
+                        if not jkey_t in j:
+                            logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, fn))
+                            continue
+                        if not jkey_k in j:
+                            logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line, fn))
+                            continue
 
-                            if jkeys_vals:
-                                for vk in jkeys_vals:
-                                    if not vk in j:
-                                        logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
-                                        continue
+                        if jkeys_vals:
+                            for vk in jkeys_vals:
+                                if not vk in j:
+                                    logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
+                                    continue
 
 #                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-                            k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-                            if jkeys_vals:
-                                d = {}
-                                for vk in jkeys_vals:
-                                    d[vk] = j[vk]
-                            else:
-                                d = j
-                            v = json.dumps(d)
+                        k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+                        if jkeys_vals:
+                            d = {}
+                            for vk in jkeys_vals:
+                                d[vk] = j[vk]
+                        else:
+                            d = j
+                        v = json.dumps(d)
 
-                            tri_list.append((args, k, v))
+                        trim_s2s = None
+                        if args.ltrim:
+                            trim_s2s = (args.ltrim[0], args.ltrim[1])
+                        
+                        tuple_list.append((args, k, v, trim_s2s))
 
-                            size = i_line + 1
-                            if 1 == size or size % (60 * 1000) == 0 or size_src <= size:
-                                rds_pipe_worker(tri_list)
-                                tri_list = []
-                                logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
+                        size = i_line + 1
+                        if 1 == size or size % (60 * 1000) == 0 or size_src <= size:
+                            rds_pipe_worker(tuple_list)
+                            tuple_list = []
+                            logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
 
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
+                    except Exception as e:
+                        logging.error(e, exc_info=True)
 
         if not args.deamon:
             break
