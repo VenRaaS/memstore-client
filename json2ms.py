@@ -14,7 +14,7 @@ from multiprocessing import Pool, Value
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
-HOST_RDS = '10.0.0.3'
+HOST_RDS = '10.0.0.11'
 PORT_RDS = '6379'
 rds = redis.StrictRedis(host=HOST_RDS, port=6379) #, socket_connect_timeout=0.0)
 
@@ -28,7 +28,7 @@ expire_sec_mpv = Value('i', 0)
 ## simulates the linux command, e.g. tail -F [file]
 ## see http://man7.org/linux/man-pages/man1/tail.1.html
 ##
-def tail_file(args, cbf, seconds_sleep=1):     
+def tail_file(args, cbf, seconds_sleep=3):
     fname = args.src_fp
     cur_f = open(fname, 'r')
     cur_ino = os.fstat(cur_f.fileno()).st_ino
@@ -41,8 +41,9 @@ def tail_file(args, cbf, seconds_sleep=1):
         while True:
             while True:
                 lines = cur_f.readlines(10 * 1024 * 1024)
-#                print lines                
-                cbf(args, lines)
+#                print lines
+                if 0 < len(lines):
+                    cbf(args, lines)
 
                 if not lines:
                     logging.info('EOF')
@@ -68,6 +69,10 @@ def tail_file(args, cbf, seconds_sleep=1):
             cur_f.close()
 
 
+def tail_sync_file(rds, args):
+    tail_file(args, weblog_td_parser)
+
+
 def weblog_td_parser(args, lines):
     tuple_list = []
     try:
@@ -76,7 +81,7 @@ def weblog_td_parser(args, lines):
             js = json.loads(cols[-1])
             if args.c not in js or 'logbody' not in js or 'action' not in js or 'logdt' not in js \
                 or not js[args.c] or not js['action'] or not js ['logdt']:
-                logging.error('invalid weblog due to lack of some basic k-v pairs')
+                logging.error('invalid weblog due to lack of some basic key-value pairs')
                 continue
             
             cn = js[args.c]
@@ -116,15 +121,60 @@ def weblog_td_parser(args, lines):
                     v = {'trans_i':js['trans_i']}
                     tuple_list.append( (args, k, v, (0,10)) )
 
-        print len(tuple_list)
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logging.error(e, exc_info=True)
- 
 
-def tail_sync_file(rds, args):
-    tail_file(args, weblog_td_parser)
-    
+
+def goccmod_parser(args, lines):
+        tuple_list = []
+
+        for i_line, l in enumerate(f):
+            try:
+                j = json.loads(l)
+
+                if not jkey_c in j:
+                    logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line, fn))
+                    continue
+                if not jkey_t in j:
+                    logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line, fn))
+                    continue
+                if not jkey_k in j:
+                    logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line, fn))
+                    continue
+
+                if jkeys_vals:
+                    for vk in jkeys_vals:
+                        if not vk in j:
+                            logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
+                            continue
+
+#                            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+                k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+                if jkeys_vals:
+                    d = {}
+                    for vk in jkeys_vals:
+                        d[vk] = j[vk]
+                else:
+                    d = j
+                v = json.dumps(d)
+
+                trim_s2s = None
+                if args.ltrim:
+                    trim_s2s = (args.ltrim[0], args.ltrim[1])
+                
+                tuple_list.append((args, k, v, trim_s2s))
+
+                size = i_line + 1
+                if 1 == size or size % (60 * 1000) == 0 or size_src <= size:
+                    rds_pipe_worker(tuple_list)
+                    tuple_list = []
+                    logging.info('{:.0f} {:.0f}%'.format(size, size / size_src * 100))
+
+            except Exception as e:
+                logging.error(e, exc_info=True)
+
+
 
 def rds_pipe_worker(tuple_list):
     #-- disable the atomic nature of a pipeline
@@ -151,6 +201,7 @@ def rds_pipe_worker(tuple_list):
                 pipe.ltrim(k, trim_s2s[0], trim_s2s[1])
 
         pipe.execute()
+        print 'pipelining {:,} rows'.format(len(tuple_list))
 
 
 ##
