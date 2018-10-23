@@ -14,7 +14,7 @@ from multiprocessing import Pool, Value
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
-HOST_RDS = '10.0.0.11'
+HOST_RDS = '10.0.0.3'
 PORT_RDS = '6379'
 rds = redis.StrictRedis(host=HOST_RDS, port=6379) #, socket_connect_timeout=0.0)
 
