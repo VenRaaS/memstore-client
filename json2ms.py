@@ -274,7 +274,8 @@ def pipe_sync_file(args):
 
 class FilesState:
     def __init__(self, fpattern, dohash=False):
-        self.fnames = glob.glob(fpattern)
+        logging.info('find all pathnames matching pattern \"{p}\" ...'.format(p=fpattern))
+        self.fnames = sorted(glob.glob(fpattern))
         self.fname2state = {}
 
         for fn in self.fnames:
