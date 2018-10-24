@@ -16,8 +16,8 @@
 ### [redis-cli](https://redis.io/topics/rediscli)
 * installation under Ubuntu  
   `apt-get install redis-tools`
-  
-`redis-cli -h ${HOST} -p 6379`
+* connect to redis
+  `redis-cli -h ${HOST} -p 6379`
 
 ### [jedis](https://github.com/xetorthio/jedis/wiki)
 
