@@ -68,6 +68,7 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
   * [Google’s Cloud Memorystore for Redis is now GA](https://techcrunch.com/2018/09/19/googles-cloud-memorystore-for-redis-is-now-generally-available/)
 * [Connecting to a Redis Instance from a Compute Engine VM](https://cloud.google.com/memorystore/docs/redis/connect-redis-instance-gce)
+* [An introduction to Redis data types and abstractions](https://redis.io/topics/data-types-intro)
 * [Redis: under the hood](https://pauladamsmith.com/articles/redis-under-the-hood.html)
 
 
