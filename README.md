@@ -47,6 +47,8 @@
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
   * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
+  
+* [Sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets)
 
 ## Key and value schema for data access in VenRaas
 ### gocc
