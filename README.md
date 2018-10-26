@@ -49,18 +49,12 @@
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
 ## Key and value schema for data access in Venraas
-* `${code_name}_mod/${table_name}/_search?q=${id_name}:${id}` => [json]
-* `${code_name}_gocc/${table_name}/_search?q=${id_name}:${id}` => [json]
-* `${code_name}_opp/${table_name}/_search?q=${id_name}:${id}` => [json_action(t), json_action(t-1), ... ]
-* `${code_name}_oua/${table_name}/_search?q=${id_name}:${id}` => [json, ... ]
-TODO
-```
-/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:009466
-[{"uid": "201008168544"}, ...]
-/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:u001
-/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:009466
-/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:009466
-```
+* `/${code_name}_mod/${table_name}/_search?q=${id_name}:${id}` => [json]
+* `/${code_name}_gocc/${table_name}/_search?q=${id_name}:${id}` => [json]
+* `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
+* `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json, json, ...]
+* `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
+* `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
