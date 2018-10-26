@@ -49,8 +49,8 @@
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
 ## Key and value schema for data access in Venraas
-* `/${code_name}_mod/${table_name}/_search?q=${id_name}:${id}` => [json]
-* `/${code_name}_gocc/${table_name}/_search?q=${id_name}:${id}` => [json]
+* `/${code_name}_mod/${table_name}/_search?q=${id_key}:${id}` => [json]
+* `/${code_name}_gocc/${table_name}/_search?q=${id_key}:${id}` => [json]
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json, json, ...]
 * `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
