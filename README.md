@@ -51,16 +51,19 @@
 ## Key and value schema for data access in VenRaas
 ### gocc
 * `/${code_name}_gocc/${table_name}/_search?q=${id_key}:${id}` => [json]
+  * `LRANGE $key 0 0`
 ### mod
 * `/${code_name}_mod/${table_name}/_search?q=${id_key}:${id}` => [json]
-  * `LRANGE $key 0 -1`
+  * `LRANGE $key 0 0`
 * `/${code_name}_mod/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]
   * `ZRANGE ${key} 0 -1`
 * `/${code_name}_mod/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]
   * `ZRANGE ${key} 0 -1`
 ### opp  
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
+  * `LRANGE $key 0 -1`
 * `/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]  
+  * `LRANGE $key 0 -1`
 ### oua
 * `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
 * `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
