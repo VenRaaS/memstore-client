@@ -48,7 +48,7 @@
   * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
 
-## Key and value schema for data access in Venraas
+## Key and value schema for data access in VenRaas
 * `/${code_name}_mod/${table_name}/_search?q=${id_key}:${id}` => [json]
 * `/${code_name}_mod/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]
   * `ZRANGE ${gid} 0 -1`
