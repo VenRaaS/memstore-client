@@ -284,19 +284,19 @@ def goccmod_parser(args, fn, cntbase, lines):
                         logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
                         continue
 
-#            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
-            k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+            idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
+            k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=idkey, i=j[jkey_k])
 
-            d = {}
+            v_obj = {}
             if jkeys_vals:
                 for vk in jkeys_vals:
                     if args.lowercase_valkeys:
-                        d[vk.lower()] = j[vk]
+                        v_obj[vk.lower()] = j[vk]
                     else:
-                        d[vk] = j[vk]
+                        v_obj[vk] = j[vk]
             else:
-                d = j
-            v = json.dumps(d, ensure_ascii=False).encode('utf8')
+                v_obj = j
+            v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
             rdscmds = []
             if 'goods' == j[args.t] or \
@@ -383,16 +383,15 @@ if '__main__' == __name__:
     jkey_c = 'code_name'
     jkey_t = 'table_name'
     jkey_k = 'id'
-    parser.add_argument("-c", default="{0}".format(jkey_c), help="source json key for code name, default: {0}".format(jkey_c))
-    parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
-    parser.add_argument("-k", default="{0}".format(jkey_k), help="source json key for key/gid/item id, default: {0}".format(jkey_k))
-    parser.add_argument("-v", "--valkeys", action='append', help="source json key for value/rule content, default: all")
-    parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower value/rule json key, default: false")
+    parser.add_argument("-c", default="{0}".format(jkey_c), help="the key for code name, default: {0}".format(jkey_c))
+    parser.add_argument("-t", default="{0}".format(jkey_t), help="the key for table/mode name, default: {0}".format(jkey_t))
+    parser.add_argument("-k", default="{0}".format(jkey_k), help="the key for key/gid/item id, default: {0}".format(jkey_k))
+    parser.add_argument("-v", "--valkeys", action='append', help="the key for value/rule content, default: all")
+    parser.add_argument("-lk", "--lowercase_idkey", action='store_true', help="lower case the key of key/gid/item id, default: false")
+    parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower case the key of value/rule, default: false")
     parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted score")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
-###    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
-###    parser.add_argument('-ltrim', nargs=2, type=int, help="ltrim start stop")
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
     subparsers = parser.add_subparsers(help='sub-command help')
