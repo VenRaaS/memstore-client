@@ -39,7 +39,7 @@
     * **notice that** you should always consider ```scan``` instead of ```keys``` to prevent block redis server.
   * [DEL key [key ...]](https://redis.io/commands/del)
     * del keys by specific pattern  
-      `redis-cli -h ${HOST} --scan --pattern '*_mod*' | xargs redis-cli  -h ${HOST} del` 
+      `redis-cli -h ${HOST} --scan --pattern '*_mod*' | xargs redis-cli  -h ${HOST} del`   
       `redis-cli -h ${HOST} --scan --pattern '*_mod*' | xargs redis-cli  -h ${HOST} unlink` 
   * [FLUSHALL](https://redis.io/commands/flushall)
   
