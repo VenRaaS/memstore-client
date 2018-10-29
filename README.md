@@ -50,6 +50,7 @@
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
   
 * [Sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets)
+  * [ZADD key score member [score member ...]](https://redis.io/commands/zadd)
 
 ## Key and value schema for data access in VenRaas
 ### gocc
