@@ -7,6 +7,7 @@ import threading
 import glob
 import subprocess
 import time
+import re
 from multiprocessing import Pool, Value
 
 
@@ -16,7 +17,8 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelna
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = '10.0.0.3'
 PORT_RDS = '6379'
-rds = redis.StrictRedis(host=HOST_RDS, port=6379) #, socket_connect_timeout=0.0)
+TIMEOUT_IN_SEC = 1
+rds = redis.StrictRedis(host=HOST_RDS, port=6379, socket_connect_timeout=TIMEOUT_IN_SEC)
 
 SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC = 300
 
@@ -31,31 +33,47 @@ expire_sec_mpv = Value('i', 0)
 ##     https://redis.io/topics/mass-insert
 ##
 def rds_pipe_worker(tuple_list):
-    #-- disable the atomic nature of a pipeline
-    #   see https://github.com/andymccurdy/redis-py#pipelines
-    with rds.pipeline(transaction=False) as pipe:        
-        for args, k, v, trim_s2s in tuple_list:
-            if RedisCommand.append == args.cmd_redis:
-                pipe.append(k, '{_v},'.format(_v=v))
-            elif RedisCommand.set == args.cmd_redis:
-                pipe.set(k, v)
-            elif RedisCommand.get == args.cmd_redis:
-                pipe.get(k)
-            elif RedisCommand.rpush == args.cmd_redis:
-                pipe.rpush(k, v)
-            elif RedisCommand.lpush == args.cmd_redis:
-                pipe.lpush(k, v)
+    try:
+        #-- disable the atomic nature of a pipeline
+        #   see https://github.com/andymccurdy/redis-py#pipelines
+        with rds.pipeline(transaction=False) as pipe:
+            for args, rdscmds in tuple_list:
+                for cmd in rdscmds:
+                    if RedisCommand.append == cmd[0]:
+                        k, v = cmd[1:] 
+                        pipe.append(k, '{_v},'.format(_v=v))
+                    elif RedisCommand.set == cmd[0]:
+                        k, v = cmd[1:] 
+                        pipe.set(k, v)
+                    elif RedisCommand.get == cmd[0]:
+                        k = cmd[1] 
+                        pipe.get(k)
+                    elif RedisCommand.rpush == cmd[0]:
+                        k, v = cmd[1:] 
+                        pipe.rpush(k, v)
+                    elif RedisCommand.lpush == cmd[0]:
+                        k, v = cmd[1:] 
+                        pipe.lpush(k, v)
+                    elif RedisCommand.ltrim == cmd[0]:
+                        k, start, stop = cmd[1:] 
+                        pipe.ltrim(k, start, stop)
+                    elif RedisCommand.expire == cmd[0]:
+                        k, v = cmd[1:] 
+                        pipe.expire(k, v)
+                    elif RedisCommand.zadd == cmd[0]:
+                        k, s, v = cmd[1:] 
+                        pipe.zadd(k, s, v)
+                    elif RedisCommand.zremrangebyscore == cmd[0]:
+                        k, minscore, maxscore = cmd[1:]
+                        pipe.zremrangebyscore(k, minscore, maxscore)
+                    elif RedisCommand.zremrangebyrank == cmd[0]:
+                        k, start, stop = cmd[1:]
+                        pipe.zremrangebyrank(k, start, stop)
 
-            if args.ttl:
-                pipe.expire(k, args.ttl)
-
-            if args.ltrim:
-                pipe.ltrim(k, args.ltrim[0], args.ltrim[1])
-            elif trim_s2s:
-                pipe.ltrim(k, trim_s2s[0], trim_s2s[1])
-
-        pipe.execute()
-        print 'pipelining {:,} rows'.format(len(tuple_list))
+            pipe.execute()
+            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
+    except KeyboardInterrupt as e:
+        logging.error(e, exc_info=True)
 
 
 ##
@@ -107,10 +125,68 @@ def tail_sync_file(args):
     tail_file(args, weblog_td_parser)
 
 
+def pipe_file(args, parser_cbf):
+    state_files = FilesState(args.src_fp, args.deamon)
+    new_state_files = state_files 
+    while True:
+        for fn in new_state_files.get_fnames():
+            if new_state_files != state_files:
+                s = state_files.get_state(fn)
+                if s:
+                    s_new = new_state_files.get_state(fn)
+                    if s_new['ino'] == s['ino'] and s_new['md5'] == s['md5']:
+                        logging.info('{n} has not change detected'.format(n=fn))
+                        continue
+
+            logging.info('{} counting ...'.format(fn))
+            size_src = 0.0
+            with open(fn, 'r') as f:
+                for i, l in enumerate(f):
+                    size_src = i
+                    pass
+            size_src += 1.0
+            logging.info('{} has {:,.0f} records'.format(fn, size_src))
+            
+            with open(fn, 'r') as f:
+                size = 0
+                while True:
+                    lines = f.readlines(30 * 1024 * 1024)
+                    if 0 < len(lines):
+                        parser_cbf(args, fn, size, lines)
+                    else:
+                        break
+
+                    size += len(lines)
+                    logging.info('{:,.0f} {:,.0f}%'.format(size, size / size_src * 100))
+
+        if not args.deamon:
+            break
+        
+        time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
+        new_state_files = FilesState(args.src_fp, args.deamon)
+
+
+def pipe_sync_file(args):
+    if IndexCategory.gocc == args.index_cat or \
+        IndexCategory.mod == args.index_cat:
+        jkey_c = args.c 
+        jkey_t = args.t
+        jkey_k = args.k
+        jkeys_vals = args.valkeys
+        logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
+        logging.info('value key: {0}'.format(jkeys_vals))
+        logging.info('ttl: {0}'.format(args.ttl))
+        logging.info('deamon mode: {0}'.format(args.deamon))
+        pipe_file(args, goccmod_parser)
+
+    elif IndexCategory.weblogtd == args.index_cat:
+        pipe_file(args, weblog_td_parser)
+
+
 def weblog_td_parser(args, fn, cntbase, lines):
     tuple_list = []
     try:
-        for l in lines:
+        for i_line, l in enumerate(lines):
             cols = l.split('\t')
             js = json.loads(cols[-1])
             if args.c not in js or 'logbody' not in js or 'action' not in js or 'logdt' not in js \
@@ -122,6 +198,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
             act = js['action']
             logdt = js ['logdt']
 
+            rdscmds = []
             js = json.loads(js['logbody'])
             if act in js.keys():
                 js = json.loads(js[act][0])
@@ -131,11 +208,24 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:{i}'.format(
                         c = cn, i = js['ven_guid'])
                     v = {'uid':js['uid']}
-                    tuple_list.append( (args, k, v, (0,6)) )
+                    if logdt:
+                        score = float(re.sub('[- :T]', '', logdt)[:14])
+                        rdscmds.append((RedisCommand.zadd, k, score, v))
+                        rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+                    else:
+                        logging.error('{} is not found at line:{} in {}'.format('logdt', i_line+cntbas, fn))
+
                     k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
                         c = cn, i = js['uid'])
                     v = {'ven_guid':js['ven_guid']}
-                    tuple_list.append( (args, k, v, (0,6)) )
+                    if logdt:
+                        score = float(re.sub('[- :T]', '', logdt)[:14])
+                        rdscmds.append((RedisCommand.zadd, k, score, v))
+                        rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+                    else:
+                        logging.error('{} is not found at line:{} in {}'.format('logdt', i_line+cntbas, fn))
 
                 #-- opp 
                 if 'pageload' == act and 'ven_guid' in js \
@@ -144,7 +234,10 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:{i}'.format(
                         c = cn, i = js['ven_guid'])
                     v = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
-                    tuple_list.append( (args, k, v, (0,60)) )
+
+                    rdscmds.append((RedisCommand.lpush, k, v))
+                    rdscmds.append((RedisCommand.ltrim, 0, 60))
+                    rdscmds.append((RedisCommand.expire, k, args.ttl))
 
                 #-- checkout
                 if 'checkout' == act \
@@ -153,8 +246,12 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:{i}'.format(
                         c = cn, i = js['ven_guid'])
                     v = {'trans_i':js['trans_i']}
-                    tuple_list.append( (args, k, v, (0,10)) )
 
+                    rdscmds.append((RedisCommand.lpush, k, v))
+                    rdscmds.append((RedisCommand.ltrim, 0, 10))
+                    rdscmds.append((RedisCommand.expire, k, args.ttl))
+
+                tuple_list.append( (args, rdscmds) )
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -187,89 +284,52 @@ def goccmod_parser(args, fn, cntbase, lines):
                         logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
                         continue
 
-#                k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
+#            k = '{c}_{ic}.{t}.{k}.{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
             k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=jkey_k, i=j[jkey_k])
 
             d = {}
             if jkeys_vals:
                 for vk in jkeys_vals:
-                    if args.lowervalkeys:
-                        vk = vk.lower() 
-                    d[vk] = j[vk]
+                    if args.lowercase_valkeys:
+                        d[vk.lower()] = j[vk]
+                    else:
+                        d[vk] = j[vk]
             else:
                 d = j
-            v = json.dumps(d)
+            v = json.dumps(d, ensure_ascii=False).encode('utf8')
 
-            trim_s2s = None
-            if args.ltrim:
-                trim_s2s = (args.ltrim[0], args.ltrim[1])
-            
-            tuple_list.append((args, k, v, trim_s2s))
+            rdscmds = []
+            if 'goods' == j[args.t] or \
+               'category' == j[args.t] or \
+               'cooc_pn' == j[args.t] or \
+               'vig' == j[args.t] or \
+               'tp' == j[args.t]:
+                rdscmds.append((RedisCommand.lpush, k, v))
+                rdscmds.append((RedisCommand.ltrim, k, 0, 0))
+                rdscmds.append((RedisCommand.expire, k, args.ttl))
+            elif 'breadcrumb' == j[args.t] or \
+                 'goods_category_flatten' == j[args.t]:
+                if not args.datetimekey:
+                    logging.error('--datetimekey is not specified')
+                    break
 
+                if args.datetimekey not in j:
+                    logging.error('{} is not found at line:{} in {}'.format(args.datetimekey, i_line+cntbase, fn))
+                    continue
+
+                #-- extract YYYYMMDD as score
+                dt = j[args.datetimekey]
+                score = float(re.sub('[- ]', '', dt)[:8])
+                score_yest = score - 1
+                rdscmds.append((RedisCommand.zadd, k, score, v))
+                rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
+                rdscmds.append((RedisCommand.expire, k, args.ttl))
+
+            tuple_list.append((args, rdscmds))
         except Exception as e:
             logging.error(e, exc_info=True)
 
     rds_pipe_worker(tuple_list)
-
-
-def pipe_file(args, parser_cbf):
-    state_files = FilesState(args.src_fp, args.deamon)
-    new_state_files = state_files 
-    while True:
-        for fn in new_state_files.get_fnames():
-            if new_state_files != state_files:
-                s = state_files.get_state(fn)
-                if s:
-                    s_new = new_state_files.get_state(fn)
-                    if s_new['ino'] == s['ino'] and s_new['md5'] == s['md5']:
-                        logging.info('{n} has not change detected'.format(n=fn))
-                        continue
-
-            logging.info('{} counting ...'.format(fn))
-            size_src = 0.0
-            with open(fn, 'r') as f:
-                for i, l in enumerate(f):
-                    size_src = i
-                    pass
-            size_src += 1.0
-            logging.info('{} has {:,.0f} records'.format(fn, size_src))
-            
-            with open(fn, 'r') as f:
-                size = 0
-                while True:
-                    lines = f.readlines(60 * 1024 * 1024)
-                    if 0 < len(lines):
-                        parser_cbf(args, fn, size, lines)
-                    else:
-                        break
-
-                    size += len(lines)
-###                    if 1 == size or size % (60 * 1000) == 0 or size_src <= size:
-                    logging.info('{:,.0f} {:,.0f}%'.format(size, size / size_src * 100))
-
-        if not args.deamon:
-            break
-        
-        time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
-        new_state_files = FilesState(args.src_fp, args.deamon)
-
-
-def pipe_sync_file(args):
-    if IndexCategory.gocc == args.index_cat or \
-        IndexCategory.mod == args.index_cat:
-        jkey_c = args.c 
-        jkey_t = args.t
-        jkey_k = args.k
-        jkeys_vals = args.valkeys
-        logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
-        logging.info('value key: {0}'.format(jkeys_vals))
-        logging.info('ttl: {0}'.format(args.ttl))
-        logging.info('command: {0}'.format(args.cmd_redis))
-        logging.info('deamon mode: {0}'.format(args.deamon))
-        pipe_file(args, goccmod_parser)
-
-    elif IndexCategory.weblogtd == args.index_cat:
-        pipe_file(args, weblog_td_parser)
 
 
 class FilesState:
@@ -307,6 +367,11 @@ class RedisCommand(Enum):
     set = 'set'
     rpush = 'rpush'
     lpush = 'lpush'
+    ltrim = 'ltrim'
+    expire = 'expire'
+    zadd = 'zadd'
+    zremrangebyscore = 'zremrangebyscore'
+    zremrangebyrank = 'zremrangebyrank'
 
     def __str__(self):
         return self.value
@@ -322,11 +387,12 @@ if '__main__' == __name__:
     parser.add_argument("-t", default="{0}".format(jkey_t), help="source json key for table/mode name, default: {0}".format(jkey_t))
     parser.add_argument("-k", default="{0}".format(jkey_k), help="source json key for key/gid/item id, default: {0}".format(jkey_k))
     parser.add_argument("-v", "--valkeys", action='append', help="source json key for value/rule content, default: all")
-    parser.add_argument("-lv", "--lowervalkeys", action='store_false', help="lower value/rule json key")
+    parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower value/rule json key, default: false")
+    parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted score")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
-    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
-    parser.add_argument('-ltrim', nargs=2, type=int, help="ltrim start stop")
+###    parser.add_argument('cmd_redis', type=RedisCommand, choices=list(RedisCommand), help="redis commands")
+###    parser.add_argument('-ltrim', nargs=2, type=int, help="ltrim start stop")
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
     subparsers = parser.add_subparsers(help='sub-command help')
