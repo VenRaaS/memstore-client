@@ -16,8 +16,8 @@
 ### [redis-cli](https://redis.io/topics/rediscli)
 * installation under Ubuntu  
   `apt-get install redis-tools`
-  
-`redis-cli -h ${HOST} -p 6379`
+* connect to redis  
+  `redis-cli -h ${HOST} -p 6379`
 
 ### [jedis](https://github.com/xetorthio/jedis/wiki)
 
@@ -47,20 +47,30 @@
   * [RPUSH key value [value ...]](https://redis.io/commands/rpush)
   * [LRANGE key start stop](https://redis.io/commands/lrange)
   * [LTRIM key start stop](https://redis.io/commands/ltrim)
+  
+* [Sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets)
 
-## Key and value schema for data access in Venraas
-* `${code_name}_mod/${table_name}/_search?q=${id_name}:${id}` => [json]
-* `${code_name}_gocc/${table_name}/_search?q=${id_name}:${id}` => [json]
-* `${code_name}_opp/${table_name}/_search?q=${id_name}:${id}` => [json_action(t), json_action(t-1), ... ]
-* `${code_name}_oua/${table_name}/_search?q=${id_name}:${id}` => [json, ... ]
-TODO
-```
-/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:009466
-[{"uid": "201008168544"}, ...]
-/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:u001
-/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:009466
-/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:009466
-```
+## Key and value schema for data access in VenRaas
+### gocc
+* `/${code_name}_gocc/${table_name}/_search?q=${id_key}:${id}` => [json]
+  * `LRANGE $key 0 0`
+### mod
+* `/${code_name}_mod/${table_name}/_search?q=${id_key}:${id}` => [json]
+  * `LRANGE $key 0 0`
+* `/${code_name}_mod/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]
+  * `ZRANGE ${key} 0 -1`
+* `/${code_name}_mod/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]
+  * `ZRANGE ${key} 0 -1`
+### opp  
+* `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
+  * `LRANGE $key 0 -1`
+* `/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]  
+  * `LRANGE $key 0 -1`
+### oua
+* `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
+* `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
+  * `ZRANGE ${key} 0 -1` gets ven_guids by the oldest first order
+  * `ZREVRANGE ${key} 0 -1` gets ven_guids by the latest first order
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
@@ -68,4 +78,7 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
   * [Google’s Cloud Memorystore for Redis is now GA](https://techcrunch.com/2018/09/19/googles-cloud-memorystore-for-redis-is-now-generally-available/)
 * [Connecting to a Redis Instance from a Compute Engine VM](https://cloud.google.com/memorystore/docs/redis/connect-redis-instance-gce)
+* [An introduction to Redis data types and abstractions](https://redis.io/topics/data-types-intro)
+* [Redis: under the hood](https://pauladamsmith.com/articles/redis-under-the-hood.html)
+
 
