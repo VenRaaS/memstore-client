@@ -54,7 +54,7 @@
   * [ZRANGE key start stop [WITHSCORES]](https://redis.io/commands/zrange), lowest to the highest
   * [ZREVRANGE key start stop [WITHSCORES]](https://redis.io/commands/zrevrange), highest to the lowest
   * [ZREMRANGEBYRANK key start stop](https://redis.io/commands/zremrangebyrank)  
-    `zremrangebyrank key 0 -2`, keep top 1 hightest scoring member.
+    `zremrangebyrank key 0 -4`, keep top 3 hightest scoring members.
 
 ## Key and value schema for data access in VenRaas
 ### gocc
