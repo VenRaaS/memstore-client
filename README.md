@@ -35,7 +35,7 @@
   * [SCAN cursor [MATCH pattern] [COUNT count]](https://redis.io/commands/scan)
     * [list of keys](https://redis.io/topics/rediscli#getting-a-list-of-keys)  
       `redis-cli -h $HOST --scan --pattern '*-11*'`
-    * count the number of keys with specific pattern, e.g.  
+    * count the number of keys with the specific pattern, e.g.  
     `redis-cli -h {$HOST} --scan --pattern '*_mod/breadcrumb*' | wc -l`
   * [KEYS pattern](https://redis.io/commands/keys) 
     * **notice that** you should always consider ```scan``` instead of ```keys``` to prevent block redis server.    
