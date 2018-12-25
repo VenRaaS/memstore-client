@@ -11,7 +11,7 @@
 ## Client
 
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
-`nc -v ${HOST} ${PORT}`
+`nc -v ${HOST} ${PORT}`, e.g. `nc -v ms-westernwall 6379`
 
 ### [redis-cli](https://redis.io/topics/rediscli)
 * installation under Ubuntu  
