@@ -55,7 +55,7 @@ def rds_pipe_worker(tuple_list):
                         k, v = cmd[1:] 
                         pipe.lpush(k, v)
                     elif RedisCommand.ltrim == cmd[0]:
-                        k, start, stop = cmd[1:] 
+                        k, start, stop = cmd[1:]
                         pipe.ltrim(k, start, stop)
                     elif RedisCommand.expire == cmd[0]:
                         k, v = cmd[1:] 
@@ -236,7 +236,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     v = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
 
                     rdscmds.append((RedisCommand.lpush, k, v))
-                    rdscmds.append((RedisCommand.ltrim, 0, 60))
+                    rdscmds.append((RedisCommand.ltrim, k, 0, 60))
                     rdscmds.append((RedisCommand.expire, k, args.ttl))
 
                 #-- checkout
@@ -248,10 +248,11 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     v = {'trans_i':js['trans_i']}
 
                     rdscmds.append((RedisCommand.lpush, k, v))
-                    rdscmds.append((RedisCommand.ltrim, 0, 10))
+                    rdscmds.append((RedisCommand.ltrim, k, 0, 10))
                     rdscmds.append((RedisCommand.expire, k, args.ttl))
 
-                tuple_list.append( (args, rdscmds) )
+                if 0 < len(rdscmds):
+                    tuple_list.append( (args, rdscmds) )
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -379,6 +380,7 @@ class RedisCommand(Enum):
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
+    parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
 
     jkey_c = 'code_name'
     jkey_t = 'table_name'
@@ -391,7 +393,6 @@ if '__main__' == __name__:
     parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower case the key of value/rule, default: false")
     parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted score")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
-    parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
     subparsers = parser.add_subparsers(help='sub-command help')
