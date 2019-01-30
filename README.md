@@ -82,6 +82,9 @@
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
+## [Redis configurations (Cloud Memorystore for Redis)](https://cloud.google.com/memorystore/docs/reference/redis-configs)
+* [Maxmemory policies](https://cloud.google.com/memorystore/docs/reference/redis-configs#maxmemory_policies)
+
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
   * [Google’s Cloud Memorystore for Redis is now GA](https://techcrunch.com/2018/09/19/googles-cloud-memorystore-for-redis-is-now-generally-available/)
