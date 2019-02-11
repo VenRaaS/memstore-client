@@ -231,8 +231,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                 if 'pageload' == act and 'ven_guid' in js \
                     and 'gid' in js and 'categ_code' in js \
                     and js['gid'] and js['categ_code']:
-                    k = '/{c}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:{i}'.format(
-                        c = cn, i = js['ven_guid'])
+                    k = '/{c}_opp/OnlinePref/{act}/_search_last_gop_ops?q=ven_guid:{i}'.format(
+                        c = cn, act = act, i = js['ven_guid'])
                     v = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
 
                     rdscmds.append((RedisCommand.lpush, k, v))
@@ -243,8 +243,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                 if 'checkout' == act \
                     and 'trans_i' in js and js['trans_i'] \
                     and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
-                    k = '/{c}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:{i}'.format(
-                        c = cn, i = js['ven_guid'])
+                    k = '/{c}_opp/OnlinePref/{act}/_search_last_checkout_gids?q=ven_guid:{i}'.format(
+                        c = cn, act = act, i = js['ven_guid'])
                     v = {'trans_i':js['trans_i']}
 
                     rdscmds.append((RedisCommand.lpush, k, v))
