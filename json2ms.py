@@ -251,6 +251,18 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     rdscmds.append((RedisCommand.ltrim, k, 0, 10))
                     rdscmds.append((RedisCommand.expire, k, args.ttl))
 
+                #-- unfavadd
+                if 'unfavadd' == act \
+                    and 'ven_guid' in js and 'gid' in js \
+                    and js['ven_guid'] and js['gid']:
+                    k = '/{c}_opp/OnlinePref/{act}?q=ven_guid:{i}'.format(
+                        c = cn, act = act, i = js['ven_guid'])
+                    v = {'gid':js['gid']}
+
+                    rdscmds.append((RedisCommand.lpush, k, v))
+                    rdscmds.append((RedisCommand.ltrim, k, 0, 20))
+                    rdscmds.append((RedisCommand.expire, k, args.ttl))
+
                 if 0 < len(rdscmds):
                     tuple_list.append( (args, rdscmds) )
         rds_pipe_worker(tuple_list)
