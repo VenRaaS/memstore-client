@@ -71,16 +71,16 @@
   * `ZRANGE ${key} 0 -1`
 ### opp  
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
-  * `ZRANGE $key 0 -1`
+  * `LRANGE $key 0 -1`
 * `/${code_name}_opp/OnlinePref/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]  
-  * `ZRANGE $key 0 -1`
+  * `LRANGE $key 0 -1`
 #### action embedded version
 * `/${code_name}_opp/OnlinePref/pageload/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
-  * `ZRANGE $key 0 -1`
+  * `LRANGE $key 0 -1`
 * `/${code_name}_opp/OnlinePref/checkout/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]
-  * `ZRANGE $key 0 -1`  
+  * `LRANGE $key 0 -1`  
 * `/${code_name}_opp/OnlinePref/unfavadd/?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
-  * `ZRANGE $key 0 -1`
+  * `LRANGE $key 0 -1`
 
 ### oua
 * `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
