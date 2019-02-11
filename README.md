@@ -79,7 +79,7 @@
   * `LRANGE $key 0 -1`
 * `/${code_name}_opp/OnlinePref/checkout/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]
   * `LRANGE $key 0 -1`  
-* `/${code_name}_opp/OnlinePref/unfavadd/?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
+* `/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
   * `LRANGE $key 0 -1`
 
 ### oua
