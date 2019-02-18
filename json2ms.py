@@ -208,6 +208,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:{i}'.format(
                         c = cn, i = js['ven_guid'])
                     v_obj = {'uid':js['uid']}
+                    v_obj['ven_guid'] = js['ven_guid']
                     v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
                     if logdt:
                         score = float(re.sub('[- :T]', '', logdt)[:14])
@@ -220,6 +221,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
                         c = cn, i = js['uid'])
                     v_obj = {'ven_guid':js['ven_guid']}
+                    v_obj['uid'] = js['uid']
                     v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
                     if logdt:
                         score = float(re.sub('[- :T]', '', logdt)[:14])
@@ -236,9 +238,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_opp/OnlinePref/{act}/_search_last_gop_ops?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
                     v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                    v_obj['ven_guid'] = js['ven_guid']
                     v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
-                    print k
-                    print v
 
                     rdscmds.append((RedisCommand.lpush, k, v))
                     rdscmds.append((RedisCommand.ltrim, k, 0, 60))
@@ -251,6 +252,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_opp/OnlinePref/{act}/_search_last_checkout_gids?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
                     v_obj = {'trans_i':js['trans_i']}
+                    v_obj['ven_guid'] = js['ven_guid']
                     v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
                     rdscmds.append((RedisCommand.lpush, k, v))
@@ -264,6 +266,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     k = '/{c}_opp/OnlinePref/{act}?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
                     v_obj = {'gid':js['gid']}
+                    v_obj['ven_guid'] = js['ven_guid']
                     v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
                     rdscmds.append((RedisCommand.lpush, k, v))
