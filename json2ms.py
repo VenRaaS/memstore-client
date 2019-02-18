@@ -207,7 +207,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                 if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
                     k = '/{c}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:{i}'.format(
                         c = cn, i = js['ven_guid'])
-                    v = {'uid':js['uid']}
+                    v_obj = {'uid':js['uid']}
+                    v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
                     if logdt:
                         score = float(re.sub('[- :T]', '', logdt)[:14])
                         rdscmds.append((RedisCommand.zadd, k, score, v))
@@ -218,7 +219,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
 
                     k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
                         c = cn, i = js['uid'])
-                    v = {'ven_guid':js['ven_guid']}
+                    v_obj = {'ven_guid':js['ven_guid']}
+                    v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
                     if logdt:
                         score = float(re.sub('[- :T]', '', logdt)[:14])
                         rdscmds.append((RedisCommand.zadd, k, score, v))
@@ -233,7 +235,10 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     and js['gid'] and js['categ_code']:
                     k = '/{c}_opp/OnlinePref/{act}/_search_last_gop_ops?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
-                    v = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                    v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                    v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
+                    print k
+                    print v
 
                     rdscmds.append((RedisCommand.lpush, k, v))
                     rdscmds.append((RedisCommand.ltrim, k, 0, 60))
@@ -245,7 +250,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
                     k = '/{c}_opp/OnlinePref/{act}/_search_last_checkout_gids?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
-                    v = {'trans_i':js['trans_i']}
+                    v_obj = {'trans_i':js['trans_i']}
+                    v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
                     rdscmds.append((RedisCommand.lpush, k, v))
                     rdscmds.append((RedisCommand.ltrim, k, 0, 10))
@@ -257,7 +263,8 @@ def weblog_td_parser(args, fn, cntbase, lines):
                     and js['ven_guid'] and js['gid']:
                     k = '/{c}_opp/OnlinePref/{act}?q=ven_guid:{i}'.format(
                         c = cn, act = act, i = js['ven_guid'])
-                    v = {'gid':js['gid']}
+                    v_obj = {'gid':js['gid']}
+                    v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
                     rdscmds.append((RedisCommand.lpush, k, v))
                     rdscmds.append((RedisCommand.ltrim, k, 0, 20))
