@@ -60,15 +60,15 @@
 
 ## Key and value schema for data access in VenRaaS
 ### gocc
-* `/${code_name}_gocc/${table_name}/_search?q=${id_key}:${id}` => [json]
+* `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
   * `LRANGE $key 0 0`
 ### mod
-* `/${code_name}_mod/${table_name}/_search?q=${id_key}:${id}` => [json]
+* `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
   * `LRANGE $key 0 0`
-* `/${code_name}_mod/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]
-  * `ZRANGE ${key} 0 -1`
-* `/${code_name}_mod/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]
-  * `ZRANGE ${key} 0 -1`
+* `/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]
+  * `LRANGE ${key} 0 -1`
+* `/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]
+  * `LRANGE ${key} 0 -1`
 ### opp  
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
   * `LRANGE $key 0 -1`
