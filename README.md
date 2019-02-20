@@ -82,7 +82,7 @@
 * `/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
   * `LRANGE $key 0 -1`
 
-### oua, [sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets)
+### oua, [sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets) whcih is sorted by log datetime
 
 * `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
 * `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
