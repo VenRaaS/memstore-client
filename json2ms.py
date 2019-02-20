@@ -286,6 +286,11 @@ def goccmod_parser(args, fn, cntbase, lines):
     jkey_k = args.k
     jkeys_vals = args.valkeys
 
+    date = None
+    m = re.search(r'[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', fn)
+    if m:
+        date = m.group(0)
+                    
     tuple_list = []
     for i_line, l in enumerate(lines):
         try:
@@ -308,7 +313,10 @@ def goccmod_parser(args, fn, cntbase, lines):
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
-            k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=idkey, i=j[jkey_k])
+            if date:
+                k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
+            else:
+                k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=idkey, i=j[jkey_k])
 
             v_obj = {}
             if jkeys_vals:
@@ -341,11 +349,13 @@ def goccmod_parser(args, fn, cntbase, lines):
                     continue
 
                 #-- extract YYYYMMDD as score
-                dt = j[args.datetimekey]
-                score = float(re.sub('[- ]', '', dt)[:8])
-                score_yest = score - 1
-                rdscmds.append((RedisCommand.zadd, k, score, v))
-                rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
+###                dt = j[args.datetimekey]
+###                score = float(re.sub('[- ]', '', dt)[:8])
+###                score_yest = score - 1
+###                rdscmds.append((RedisCommand.zadd, k, score, v))
+###                rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
+                rdscmds.append((RedisCommand.lpush, k, v))
+#                rdscmds.append((RedisCommand.ltrim, k, 0, 0))
                 rdscmds.append((RedisCommand.expire, k, args.ttl))
 
             tuple_list.append((args, rdscmds))
