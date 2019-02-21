@@ -286,6 +286,7 @@ def goccmod_parser(args, fn, cntbase, lines):
     jkey_k = args.k
     jkeys_vals = args.valkeys
 
+    #-- extract date from filename, i.e. %Y%m%d
     date = None
     m = re.search(r'[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', fn)
     if m:
@@ -340,23 +341,25 @@ def goccmod_parser(args, fn, cntbase, lines):
                 rdscmds.append((RedisCommand.expire, k, args.ttl))
             elif 'breadcrumb' == j[args.t] or \
                  'goods_category_flatten' == j[args.t]:
+
+                #-- push data to list
                 if not args.datetimekey:
-                    logging.error('--datetimekey is not specified')
-                    break
+                    rdscmds.append((RedisCommand.lpush, k, v))
+                    rdscmds.append((RedisCommand.ltrim, k, 0, 0))
+                    rdscmds.append((RedisCommand.expire, k, args.ttl))
+                #-- add data to sorted set
+                else:
+                    if args.datetimekey not in j:
+                        logging.error('args.datetimekey is not found at line:{} in {}'.format(i_line+cntbase, fn))
+                        continue
 
-                if args.datetimekey not in j:
-                    logging.error('{} is not found at line:{} in {}'.format(args.datetimekey, i_line+cntbase, fn))
-                    continue
-
-                #-- extract YYYYMMDD as score
-###                dt = j[args.datetimekey]
-###                score = float(re.sub('[- ]', '', dt)[:8])
-###                score_yest = score - 1
-###                rdscmds.append((RedisCommand.zadd, k, score, v))
-###                rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
-                rdscmds.append((RedisCommand.lpush, k, v))
-#                rdscmds.append((RedisCommand.ltrim, k, 0, 0))
-                rdscmds.append((RedisCommand.expire, k, args.ttl))
+                    # extract YYYYMMDD as score
+                    dt = j[args.datetimekey]
+                    score = float(re.sub('[- ]', '', dt)[:8])
+                    score_yest = score - 1
+                    rdscmds.append((RedisCommand.zadd, k, score, v))
+                    rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
+                    rdscmds.append((RedisCommand.expire, k, args.ttl))
 
             tuple_list.append((args, rdscmds))
         except Exception as e:
@@ -423,7 +426,7 @@ if '__main__' == __name__:
     parser.add_argument("-v", "--valkeys", action='append', help="the key for value/rule content, default: all")
     parser.add_argument("-lk", "--lowercase_idkey", action='store_true', help="lower case the key of key/gid/item id, default: false")
     parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower case the key of value/rule, default: false")
-    parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted score")
+    parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted set score")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
 
@@ -436,6 +439,9 @@ if '__main__' == __name__:
     parser_tail.add_argument('-se', '--startfromend', action='store_true', help='start sync from the new appending rows')
  
     args = parser.parse_args()
+
+    if args.datetimekey:
+        logging.warn('--datetimekey, the argument will cause data to be added into Sorted Set, i.e. zadd')
 
     if args.deamon:
         try:
