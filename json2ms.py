@@ -15,7 +15,7 @@ from multiprocessing import Pool, Value
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
-HOST_RDS = 'ms-westernwall'
+HOST_RDS = 'ms-node-01'
 PORT_RDS = '6379'
 TIMEOUT_IN_SEC = 1
 rds = redis.StrictRedis(host=HOST_RDS, port=6379, socket_connect_timeout=TIMEOUT_IN_SEC)
