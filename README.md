@@ -11,13 +11,18 @@
 ## Client
 
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
-`nc -v ${HOST} ${PORT}`, e.g. `nc -v ms-westernwall 6379`
+* connect to redis  
+  `nc -v ${HOST} ${PORT}`, e.g. `nc -v ms-westernwall 6379`
+* installation under ubuntu  
+  `ubuntu - `apt-get install netcat`
+* installation under centos  
+  `yum install nc.x86_64`
 
 ### [redis-cli](https://redis.io/topics/rediscli)
-* installation under Ubuntu  
-  `apt-get install redis-tools`
 * connect to redis  
   `redis-cli -h ${HOST} -p 6379`
+* installation under Ubuntu  
+  `apt-get install redis-tools`
 
 ### [jedis](https://github.com/xetorthio/jedis/wiki)
 
