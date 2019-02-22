@@ -346,6 +346,10 @@ def goccmod_parser(args, fn, cntbase, lines):
             v_obj = {}
             if jkeys_vals:
                 for vk in jkeys_vals:
+                    if vk not in j:
+                        logging.error('key:{vkey} does not in json'.format(vkey=vk))
+                        continue
+
                     if args.lowercase_valkeys:
                         v_obj[vk.lower()] = j[vk]
                     else:
