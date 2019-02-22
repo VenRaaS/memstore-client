@@ -71,7 +71,8 @@ def rds_pipe_worker(tuple_list):
                         pipe.zremrangebyrank(k, start, stop)
 
             pipe.execute()
-            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
+#            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
+            logging.info('pipelining {0} rows'.format(len(tuple_list)))
     except KeyboardInterrupt as e:
         logging.error(e, exc_info=True)
 
