@@ -122,7 +122,7 @@ def tail_file(args, parser_cbf, seconds_sleep=3):
 
 
 def tail_sync_file(args):
-    tail_file(args, weblog_td_parser)
+    tail_file(args, weblog_parser)
 
 
 def pipe_file(args, parser_cbf):
@@ -179,11 +179,11 @@ def pipe_sync_file(args):
         logging.info('deamon mode: {0}'.format(args.deamon))
         pipe_file(args, goccmod_parser)
 
-    elif IndexCategory.weblogtd == args.index_cat:
-        pipe_file(args, weblog_td_parser)
+    elif IndexCategory.weblog == args.index_cat:
+        pipe_file(args, weblog_parser)
 
 
-def weblog_td_parser(args, fn, cntbase, lines):
+def weblog_parser(args, fn, cntbase, lines):
     tuple_list = []
     try:
         for i_line, l in enumerate(lines):
@@ -298,7 +298,7 @@ def weblog_td_parser(args, fn, cntbase, lines):
 
                     if 0 < len(rdscmds):
                         tuple_list.append( (args, rdscmds) )
-        exit()
+
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logging.error(e, exc_info=True)
@@ -417,7 +417,7 @@ from enum import Enum
 class IndexCategory(Enum):
     gocc = 'gocc'
     mod = 'mod'
-    weblogtd = 'weblogtd'
+    weblog = 'weblog'
 
     def __str__(self):
         return self.value
