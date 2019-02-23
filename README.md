@@ -23,6 +23,12 @@
   `redis-cli -h ${HOST} -p 6379`
 * installation under Ubuntu  
   `apt-get install redis-tools`
+* installation under Centos, [ref](https://www.linode.com/docs/databases/redis/install-and-configure-redis-on-centos-7/#install-redis)
+  ```
+  yum install epel-release
+  yum install redis
+  systemctl status redis    # redis should be disable 
+  ```
 
 ### [jedis](https://github.com/xetorthio/jedis/wiki)
 
@@ -67,6 +73,7 @@
 ### gocc
 * `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
   * `LRANGE $key 0 0`
+
 ### mod
 * `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
   * `LRANGE $key 0 0`
@@ -74,6 +81,7 @@
   * `LRANGE ${key} 0 -1`
 * `/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]
   * `LRANGE ${key} 0 -1`
+
 ### opp  
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]
   * `LRANGE $key 0 -1`
@@ -88,7 +96,6 @@
   * `LRANGE $key 0 -1`
 
 ### oua, [sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets) whcih is sorted by log datetime
-
 * `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]
 * `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
   * `ZRANGE ${key} 0 -1` gets ven_guids by the oldest first order
