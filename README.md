@@ -90,14 +90,14 @@
       * `["comp01_mod_20190202", "tp", "categ_code01"]`
       * `["comp01_mod_20190202", "i2i_cooc", "gid01"]`
 * goods_category_flatten
-  * `["${code_name}_mod_${date}", "gcf", "${gid}"]` => [json, json, ...] 
+  * `["${code_name}_mod_${date}", "gcf", "${gid}"]` => [json] 
   * ~~`/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
       * `LRANGE ${key} 0 -1`
     * Data format example
       * `["comp01_mod_20190202", "gcf", "gid01"]`
 * breadcrumb
-  * `["${code_name}_mod_${date}", "bc", "${gid}"]` => [json, json, ...]
+  * `["${code_name}_mod_${date}", "bc", "${gid}"]` => [json]
   * ~~`/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
       * `LRANGE ${key} 0 -1`
