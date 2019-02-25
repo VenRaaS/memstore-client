@@ -73,7 +73,7 @@
 ### gocc
 * goods / category
   * `["${code_name}_gocc_${date}", "${table_name}", "${id}"]` => [json]
-  * `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
+  * ~~`/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]~~
     * MS query format
       * `LRANGE $key 0 0`
     * Data format example
@@ -112,27 +112,39 @@
     * ~~`LRANGE $key 0 -1`~~
 #### action embedded version
 * `["${code_name}_opp", "pageload", "${ven_guid}"]` => [json_action(t), json_action(t-1), ... ]
-* `/${code_name}_opp/OnlinePref/pageload/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ] (old version)
+* ~~`/${code_name}_opp/OnlinePref/pageload/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * MS query format
     * `LRANGE $key 0 -1`
+  * Data format example
+    * `["comp01_opp", "pageload", "ven_guid01"]`
 * `["${code_name}_opp", "checkout", "${ven_guid}"]` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]
-* `/${code_name}_opp/OnlinePref/checkout/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...] (old version)
+* ~~`/${code_name}_opp/OnlinePref/checkout/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]~~
   * MS query format
     * `LRANGE $key 0 -1`
+  * Data format example
+    * `["comp01_opp", "checkout", "ven_guid01"]`
 * `["${code_name}_opp", "unfavadd", "{ven_guid}"]` => [json_action(t), json_action(t-1), ... ]
-* `/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ] (old version)
+* ~~`/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * MS query format
     * `LRANGE $key 0 -1`
+  * Data format example
+    * `["comp01_opp", "unfavadd", "ven_guid01"]`
 
 ### oua, [sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets) whcih is sorted by log datetime
 
 * `["${code_name}_oua", "guid2uid", "${ven_guid}"]` => [{"uid": "201008168544"}, ...]
-* `/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...] (old version)
-* `["${code_name}_oua", "uid2guid", "${uid}"]` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
-* `/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...] (old version)
+* ~~`/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]~~
+  * MS query format
+    * `LRANGE ${key} 0 -1`
+  * Data format example
+    * `["comp01_oua", "guid2uid", "ven_guid01"]`
+* `["${code_name}_oua", "uid2guids", "${uid}"]` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
+* ~~`/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]~~
   * MS query format
     * `ZRANGE ${key} 0 -1` gets ven_guids by the oldest first order
     * `ZREVRANGE ${key} 0 -1` gets ven_guids by the latest first order
+  * Data format example
+    * `["comp01_oua", "uid2guids", "uid01"]`
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
 
