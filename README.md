@@ -83,7 +83,7 @@
 ### mod
 * c2i_model / i2i_model / ...
   * `["${code_name}_mod_${date}", "${table_name}", "${id}"]` => [json]
-  * `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
+  ~~* `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)~~
     * MS query format
       * `LRANGE $key 0 0`
     * Data format example
