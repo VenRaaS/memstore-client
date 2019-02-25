@@ -123,7 +123,7 @@
     * `LRANGE $key 0 -1`
   * Data format example
     * `["comp01_opp", "checkout", "ven_guid01"]`
-* `["${code_name}_opp", "unfavadd", "{ven_guid}"]` => [json_action(t), json_action(t-1), ... ]
+* `["${code_name}_opp", "unfavadd", "${ven_guid}"]` => [json_action(t), json_action(t-1), ... ]
 * ~~`/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * MS query format
     * `LRANGE $key 0 -1`
