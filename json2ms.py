@@ -12,7 +12,7 @@ from multiprocessing import Pool, Value
 
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = 'ms-node-01'
@@ -140,25 +140,24 @@ def pipe_file(args, parser_cbf):
                         continue
 
             logging.info('{} counting ...'.format(fn))
-            size_src = 0.0
+            linnum_src = 0.0
             with open(fn, 'r') as f:
-                for i, l in enumerate(f):
-                    size_src = i
+                for i, l in enumerate(f, 1):
+                    linnum_src = i
                     pass
-            size_src += 1.0
-            logging.info('{} has {:,.0f} records'.format(fn, size_src))
+            logging.info('{} has {:,.0f} records'.format(fn, linnum_src))
             
             with open(fn, 'r') as f:
-                size = 0
+                linenum = 0
                 while True:
                     lines = f.readlines(30 * 1024 * 1024)
                     if 0 < len(lines):
-                        parser_cbf(args, fn, size, lines)
+                        parser_cbf(args, fn, linenum, lines)
                     else:
                         break
 
-                    size += len(lines)
-                    logging.info('{:,.0f} {:,.0f}%'.format(size, size / size_src * 100))
+                    linenum += len(lines)
+                    logging.info('{:,.0f} {:,.0f}%'.format(linenum, linenum / linnum_src * 100))
 
         if not args.deamon:
             break
@@ -184,10 +183,10 @@ def pipe_sync_file(args):
         pipe_file(args, weblog_parser)
 
 
-def weblog_parser(args, fn, cntbase, lines):
+def weblog_parser(args, fn, linebase, lines):
     tuple_list = []
     try:
-        for i_line, l in enumerate(lines):
+        for linenum, l in enumerate(lines, 1):
             #-- get the columns 
             cols = l.split('\t')
             
@@ -240,7 +239,7 @@ def weblog_parser(args, fn, cntbase, lines):
                             rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
                         else:
-                            logging.error('{} is not found at line:{} in {}'.format('logdt', i_line+cntbase, fn))
+                            logging.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
                         k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
                             c = cn, i = js['uid'])
@@ -253,7 +252,7 @@ def weblog_parser(args, fn, cntbase, lines):
                             rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
                         else:
-                            logging.error('{} is not found at line:{} in {}'.format('logdt', i_line+cntbase, fn))
+                            logging.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
                     #-- opp 
                     if 'pageload' == act and 'ven_guid' in js \
@@ -305,7 +304,7 @@ def weblog_parser(args, fn, cntbase, lines):
         logging.error(e, exc_info=True)
 
 
-def goccmod_parser(args, fn, cntbase, lines):
+def goccmod_parser(args, fn, linebase, lines):
     jkey_c = args.c 
     jkey_t = args.t
     jkey_k = args.k
@@ -318,24 +317,24 @@ def goccmod_parser(args, fn, cntbase, lines):
         date = m.group(0)
                     
     tuple_list = []
-    for i_line, l in enumerate(lines):
+    for linenum, l in enumerate(lines, 1):
         try:
             j = json.loads(l)
 
             if not jkey_c in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_c, i_line+cntbas, fn))
+                logging.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
                 continue
             if not jkey_t in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_t, i_line+cntbase, fn))
+                logging.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
                 continue
             if not jkey_k in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_k, i_line+cntbase, fn))
+                logging.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
                 continue
 
             if jkeys_vals:
-                for vk in jkeys_vals:
-                    if not vk in j:
-                        logging.error('{} is not found at line:{} in {}'.format(vk, i_line, fn))
+                for valkey in jkeys_vals:
+                    if not valkey in j:
+                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
@@ -379,7 +378,7 @@ def goccmod_parser(args, fn, cntbase, lines):
                 #-- add data to sorted set
                 else:
                     if args.datetimekey not in j:
-                        logging.error('args.datetimekey is not found at line:{} in {}'.format(i_line+cntbase, fn))
+                        logging.error('args.datetimekey is not found at line:{} in {}'.format(linenum+linebase, fn))
                         continue
 
                     # extract YYYYMMDD as score
