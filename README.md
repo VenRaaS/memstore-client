@@ -71,32 +71,38 @@
 
 ## Key and value schema for data access in VenRaaS
 ### gocc
-* `["${code_name}_gocc_${date}", "${table_name}", "${id}"]` => [json]
-* `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
-  * MS query format
-    * `LRANGE $key 0 0`
-  * Data format example
-    * `["comp01_gocc_20190202", "goods", "gid01"]`
-    * `["comp01_gocc_20190202", "category", "categ_code01"]`
+* goods / category
+  * `["${code_name}_gocc_${date}", "${table_name}", "${id}"]` => [json]
+  * `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
+    * MS query format
+      * `LRANGE $key 0 0`
+    * Data format example
+      * `["comp01_gocc_20190202", "goods", "gid01"]`
+      * `["comp01_gocc_20190202", "category", "categ_code01"]`
   
 ### mod
-* `["${code_name}_mod_${date}", "${table_name}", "${id}"]` => [json]
-* `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
-  * MS query format
-    * `LRANGE $key 0 0`
-  * Data format example
-    * `["comp01_mod_20190202", "tp", "categ_code01"]`
-    * `["comp01_mod_20190202", "i2i_cooc", "gid01"]`
-* `["${code_name}_mod_${date}", "goods_category_flatten", "${gid}"]` => [json, json, ...] 
-* `/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...] (old version)
-  * MS query format
-    * `LRANGE ${key} 0 -1`
-  * Data format example
-    * `["comp01_mod_20190202", "gcf", "gid01"]`
-* `["${code_name}_mod_${date}", "breadcrumb", "${gid}"]` => [json, json, ...]
-* `/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...] (old version)
-  * MS query format
-    * `LRANGE ${key} 0 -1`
+* c2i_model / i2i_model / ...
+  * `["${code_name}_mod_${date}", "${table_name}", "${id}"]` => [json]
+  * `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json] (old version)
+    * MS query format
+      * `LRANGE $key 0 0`
+    * Data format example
+      * `["comp01_mod_20190202", "tp", "categ_code01"]`
+      * `["comp01_mod_20190202", "i2i_cooc", "gid01"]`
+* goods_category_flatten
+  * `["${code_name}_mod_${date}", "gcf", "${gid}"]` => [json, json, ...] 
+  * `/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...] (old version)
+    * MS query format
+      * `LRANGE ${key} 0 -1`
+    * Data format example
+      * `["comp01_mod_20190202", "gcf", "gid01"]`
+* breadcrumb
+  * `["${code_name}_mod_${date}", "bc", "${gid}"]` => [json, json, ...]
+  * `/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...] (old version)
+    * MS query format
+      * `LRANGE ${key} 0 -1`
+    * Data format example
+      * `["comp01_mod_20190202", "bc", "gid01"]`
 ### opp
 * `/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ] (old version)
   * MS query format
