@@ -70,6 +70,7 @@
     `zremrangebyrank key 0 -4`, keep top 3 hightest scoring members.
 
 ## Key and value schema for data access in VenRaaS
+## Key and value schema for data access in VenRaaS
 ### gocc
 * `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
   * `LRANGE $key 0 0`
