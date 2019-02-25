@@ -73,7 +73,12 @@
 ### gocc
 * `["${code_name}_gocc_${date}", "${table_name}", "${id}"]` => [json]
 * `/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
-  * `LRANGE $key 0 0`
+  * MS query example
+    * `LRANGE $key 0 0`
+  * Data format example
+    * `["comp01_gocc_20190202", "goods", "gid01"]`
+    * `["comp01_gocc_20190202", "category", "categ_code01"]`
+  
 ### mod
 * `["${code_name}_mod_${date}", "${table_name}", "${id}"]` => [json]
 * `/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]
