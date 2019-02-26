@@ -70,6 +70,8 @@
     `zremrangebyrank key 0 -4`, keep top 3 hightest scoring members.
 
 ## Key and value schema for data access in VenRaaS
+### aliases_date
+* `/venraas/aliases_date/code_name/${code_name}` => [json]
 ### gocc
 * goods / category
   * `["${code_name}_gocc_${date}", "${table_name}", "${id}"]` => [json]
