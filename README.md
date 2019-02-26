@@ -70,9 +70,21 @@
     `zremrangebyrank key 0 -4`, keep top 3 hightest scoring members.
 
 ## Key and value schema for data access in VenRaaS
-### aliases_date
-* `["venraas", "aliases_date", "${code_name}"]` => [json]
-* ~~`/venraas/aliases_date/code_name/${code_name}` => [json]~~
+### venraas
+* aliases_date
+  * `["venraas", "aliases_date", "${code_name}"]` => [json]
+  * ~~`/venraas/aliases_date/code_name/${code_name}` => [json]~~
+  * MS query format
+    * `LRANGE $key 0 0`
+  * Key format example
+    * ["venraas", "aliases_date", "comp01"]
+* com_pkgs
+  * `["venraas", "com_pkgs", ""] => [json]
+  * ~~`/venraas/com_pkgs/search` => [json]~~
+  * MS query format
+    * `LRANGE $key 0 0`
+  * Key format example
+    * ["venraas", "com_pkgs", ""]
 
 ### gocc
 * goods / category
@@ -80,7 +92,7 @@
   * ~~`/${code_name}_gocc_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]~~
     * MS query format
       * `LRANGE $key 0 0`
-    * Data format example
+    * Key format example
       * `["comp01_gocc_20190202", "goods", "gid01"]`
       * `["comp01_gocc_20190202", "category", "categ_code01"]`
   
@@ -90,7 +102,7 @@
   * ~~`/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]~~
     * MS query format
       * `LRANGE $key 0 0`
-    * Data format example
+    * Key format example
       * `["comp01_mod_20190202", "tp", "categ_code01"]`
       * `["comp01_mod_20190202", "i2i_cooc", "gid01"]`
 * goods_category_flatten
@@ -98,14 +110,14 @@
   * ~~`/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
       * `LRANGE ${key} 0 -1`
-    * Data format example
+    * Key format example
       * `["comp01_mod_20190202", "gcf", "gid01"]`
 * breadcrumb
   * `["${code_name}_mod_${date}", "bc", "${gid}"]` => [json]
   * ~~`/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
       * `LRANGE ${key} 0 -1`
-    * Data format example
+    * Key format example
       * `["comp01_mod_20190202", "bc", "gid01"]`
 ### opp
 * ~~`/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
@@ -119,19 +131,19 @@
 * ~~`/${code_name}_opp/OnlinePref/pageload/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * MS query format
     * `LRANGE $key 0 -1`
-  * Data format example
+  * Key format example
     * `["comp01_opp", "pageload", "ven_guid01"]`
 * `["${code_name}_opp", "checkout", "${ven_guid}"]` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]
 * ~~`/${code_name}_opp/OnlinePref/checkout/_search_last_checkout_gids?q=ven_guid:${ven_guid}` => [{"trans_i": {"ilist": [{"id": "xxx"}], "id": "ooo"}}, ...]~~
   * MS query format
     * `LRANGE $key 0 -1`
-  * Data format example
+  * Key format example
     * `["comp01_opp", "checkout", "ven_guid01"]`
 * `["${code_name}_opp", "unfavadd", "${ven_guid}"]` => [json_action(t), json_action(t-1), ... ]
 * ~~`/${code_name}_opp/OnlinePref/unfavadd?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * MS query format
     * `LRANGE $key 0 -1`
-  * Data format example
+  * Key format example
     * `["comp01_opp", "unfavadd", "ven_guid01"]`
 
 ### oua, [sorted sets](https://redis.io/topics/data-types-intro#redis-sorted-sets) whcih is sorted by log datetime
@@ -140,14 +152,14 @@
 * ~~`/${code_name}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:${ven_guid}` => [{"uid": "201008168544"}, ...]~~
   * MS query format
     * `LRANGE ${key} 0 -1`
-  * Data format example
+  * Key format example
     * `["comp01_oua", "guid2uid", "ven_guid01"]`
 * `["${code_name}_oua", "uid2guids", "${uid}"]` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]
 * ~~`/${code_name}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:${uid}` => [{"ven_guid": "202004242347055333a8c010adf2cc"}, ...]~~
   * MS query format
     * `ZRANGE ${key} 0 -1` gets ven_guids by the oldest first order
     * `ZREVRANGE ${key} 0 -1` gets ven_guids by the latest first order
-  * Data format example
+  * Key format example
     * `["comp01_oua", "uid2guids", "uid01"]`
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
