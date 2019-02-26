@@ -79,7 +79,7 @@
   * Key format example
     * ["venraas", "aliases_date", "comp01"]
 * com_pkgs
-  * `["venraas", "com_pkgs", ""] => [json]
+  * `["venraas", "com_pkgs", ""]` => [json]
   * ~~`/venraas/com_pkgs/search` => [json]~~
   * MS query format
     * `LRANGE $key 0 0`
