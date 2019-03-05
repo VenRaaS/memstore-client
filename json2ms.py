@@ -33,6 +33,8 @@ expire_sec_mpv = Value('i', 0)
 ##     https://redis.io/topics/mass-insert
 ##
 def rds_pipe_worker(tuple_list):
+    resp_list = []
+
     try:
         #-- disable the atomic nature of a pipeline
         #   see https://github.com/andymccurdy/redis-py#pipelines
@@ -54,6 +56,9 @@ def rds_pipe_worker(tuple_list):
                     elif RedisCommand.lpush == cmd[0]:
                         k, v = cmd[1:] 
                         pipe.lpush(k, v)
+                    elif RedisCommand.lrange == cmd[0]:
+                        k, start, stop = cmd[1:]
+                        pipe.lrange(k, start, stop)
                     elif RedisCommand.ltrim == cmd[0]:
                         k, start, stop = cmd[1:]
                         pipe.ltrim(k, start, stop)
@@ -70,12 +75,14 @@ def rds_pipe_worker(tuple_list):
                         k, start, stop = cmd[1:]
                         pipe.zremrangebyrank(k, start, stop)
 
-            pipe.execute()
 #            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
             logging.info('pipelining {0} rows'.format(len(tuple_list)))
+
+            resp_list = pipe.execute()
     except KeyboardInterrupt as e:
         logging.error(e, exc_info=True)
 
+    return resp_list
 
 ##
 ## simulates the linux command, e.g. tail -F [file]
@@ -164,23 +171,6 @@ def pipe_file(args, parser_cbf):
         
         time.sleep(SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC)
         new_state_files = FilesState(args.src_fp, args.deamon)
-
-
-def pipe_sync_file(args):
-    if IndexCategory.gocc == args.index_cat or \
-        IndexCategory.mod == args.index_cat:
-        jkey_c = args.c 
-        jkey_t = args.t
-        jkey_k = args.k
-        jkeys_vals = args.valkeys
-        logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
-        logging.info('value key: {0}'.format(jkeys_vals))
-        logging.info('ttl: {0}'.format(args.ttl))
-        logging.info('deamon mode: {0}'.format(args.deamon))
-        pipe_file(args, goccmod_parser)
-
-    elif IndexCategory.weblog == args.index_cat:
-        pipe_file(args, weblog_parser)
 
 
 def weblog_parser(args, fn, linebase, lines):
@@ -363,7 +353,8 @@ def goccmod_parser(args, fn, linebase, lines):
                'category' == j[args.t] or \
                'cooc_pn' == j[args.t] or \
                'vig' == j[args.t] or \
-               'tp' == j[args.t]:
+               'tp' == j[args.t] or \
+               'cppn' == j[args.t]:
                 rdscmds.append((RedisCommand.lpush, k, v))
                 rdscmds.append((RedisCommand.ltrim, k, 0, 0))
                 rdscmds.append((RedisCommand.expire, k, args.ttl))
@@ -396,6 +387,131 @@ def goccmod_parser(args, fn, linebase, lines):
     rds_pipe_worker(tuple_list)
 
 
+def update_goods_parser(args, fn, linebase, lines):
+    jkey_c = args.c 
+    jkey_t = args.t
+    jkey_k = args.k
+    jkeys_vals = args.valkeys
+###    av = 'availability'
+
+    #-- extract date from filename, i.e. %Y%m%d
+    date = None
+    m = re.search(r'[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', fn)
+    if m:
+        date = m.group(0)
+                    
+    tuple_list = []
+    for linenum, l in enumerate(lines, 1):
+        try:
+            j = json.loads(l)
+
+            if not jkey_c in j:
+                logging.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
+                continue
+#TODO... add table_name to json
+            j['table_name'] = 'goods'
+            if not jkey_t in j:
+                logging.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
+                continue
+            if not jkey_k in j:
+                logging.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
+                continue
+
+###            if jkeys_vals:
+###                for valkey in jkeys_vals:
+###                    if not valkey in j:
+###                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
+###                        continue
+
+            idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
+            k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic='gocc', d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
+
+            rdscmds = []
+            rdscmds.append((RedisCommand.lrange, k, 0, 0))
+
+            tuple_list.append((args, rdscmds))
+        except Exception as e:
+            logging.error(e, exc_info=True)
+
+    #-- get goods info list from ms 
+    msGoods_dic = {} 
+    if 0 < len(tuple_list):
+        msGoods = rds_pipe_worker(tuple_list)
+        for l in msGoods:
+            if len(l) <= 0:
+                continue
+            j = json.loads(l[0])
+            if 'gid' in j:
+                msGoods_dic[ j['gid'] ] = j
+    
+    #-- upsert goods into ms
+    tuple_list = []
+    for linenum, l in enumerate(lines, 1):
+        update_j = json.loads(l)
+
+#TODO... add table_name to json
+        update_j['table_name'] = 'goods'
+        k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=update_j[jkey_c], ic='gocc', d=date, t=update_j[jkey_t], k=idkey, i=update_j[jkey_k])
+
+        v_obj = {}
+        gid = update_j[jkey_k]
+        if gid in msGoods_dic:
+            ms_j = msGoods_dic[gid]
+            v_obj = ms_j
+
+        if jkeys_vals:
+            isValid = True
+            for vk in jkeys_vals:
+                if vk not in update_j:
+                    logging.error('{gid}, key [{vkey}] does not in update json'.format(gid=gid, vkey=vk))
+                    isValid = False
+                    break
+
+                if args.lowercase_valkeys:
+                    v_obj[vk.lower()] = update_j[vk]
+                else:
+                    v_obj[vk] = update_j[vk]
+
+            # abandon the record if any of value-keys is not found 
+            if not isValid:
+                continue
+        else:
+            for k, v in update_j.iteritems():
+                if args.lowercase_valkeys:
+                    v_obj[k] = v
+
+        v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
+
+        rdscmds = []
+        rdscmds.append((RedisCommand.lpush, k, v))
+        rdscmds.append((RedisCommand.ltrim, k, 0, 0))
+        rdscmds.append((RedisCommand.expire, k, args.ttl))
+
+        tuple_list.append((args, rdscmds))
+        
+    rds_pipe_worker(tuple_list)
+
+
+def pipe_sync_file(args):
+    if IndexCategory.gocc == args.index_cat or \
+        IndexCategory.mod == args.index_cat:
+        jkey_c = args.c 
+        jkey_t = args.t
+        jkey_k = args.k
+        jkeys_vals = args.valkeys
+        logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
+        logging.info('value key: {0}'.format(jkeys_vals))
+        logging.info('ttl: {0}'.format(args.ttl))
+        logging.info('deamon mode: {0}'.format(args.deamon))
+        pipe_file(args, goccmod_parser)
+
+    elif IndexCategory.weblog == args.index_cat:
+        pipe_file(args, weblog_parser)
+
+    elif IndexCategory.update_goods == args.index_cat:
+        pipe_file(args, update_goods_parser)
+
+
 class FilesState:
     def __init__(self, fpattern, dohash=False):
         logging.info('find all pathnames matching pattern \"{p}\" ...'.format(p=fpattern))
@@ -422,6 +538,7 @@ class IndexCategory(Enum):
     gocc = 'gocc'
     mod = 'mod'
     weblog = 'weblog'
+    update_goods = 'update_goods'
 
     def __str__(self):
         return self.value
@@ -432,6 +549,7 @@ class RedisCommand(Enum):
     set = 'set'
     rpush = 'rpush'
     lpush = 'lpush'
+    lrange = 'lrange'
     ltrim = 'ltrim'
     expire = 'expire'
     zadd = 'zadd'
@@ -440,6 +558,7 @@ class RedisCommand(Enum):
 
     def __str__(self):
         return self.value
+
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser()
