@@ -154,7 +154,7 @@ def pipe_file(args, parser_cbf):
             logging.info('{} has {:,.0f} records'.format(fn, linnum_src))
             
             with open(fn, 'r') as f:
-                linenum = 0
+                linenum = 0.0
                 while True:
                     lines = f.readlines(10 * 1024 * 1024)
                     if 0 < len(lines):
