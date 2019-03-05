@@ -75,10 +75,9 @@ def rds_pipe_worker(tuple_list):
                         k, start, stop = cmd[1:]
                         pipe.zremrangebyrank(k, start, stop)
 
+            resp_list = pipe.execute()
 #            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
             logging.info('pipelining {0} rows'.format(len(tuple_list)))
-
-            resp_list = pipe.execute()
     except KeyboardInterrupt as e:
         logging.error(e, exc_info=True)
 
@@ -327,7 +326,7 @@ def goccmod_parser(args, fn, linebase, lines):
                         logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
                         continue
 
-            idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
+            idkey = jkey_k.lower() if args.lowercase_key else jkey_k
             if date:
                 k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
             else:
@@ -340,7 +339,7 @@ def goccmod_parser(args, fn, linebase, lines):
                         logging.error('key:{vkey} does not in json'.format(vkey=vk))
                         continue
 
-                    if args.lowercase_valkeys:
+                    if args.lowercase_key:
                         v_obj[vk.lower()] = j[vk]
                     else:
                         v_obj[vk] = j[vk]
@@ -392,7 +391,6 @@ def update_goods_parser(args, fn, linebase, lines):
     jkey_t = args.t
     jkey_k = args.k
     jkeys_vals = args.valkeys
-###    av = 'availability'
 
     #-- extract date from filename, i.e. %Y%m%d
     date = None
@@ -423,7 +421,7 @@ def update_goods_parser(args, fn, linebase, lines):
 ###                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
 ###                        continue
 
-            idkey = jkey_k.lower() if args.lowercase_idkey else jkey_k
+            idkey = jkey_k.lower() if args.lowercase_key else jkey_k
             k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic='gocc', d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
 
             rdscmds = []
@@ -467,7 +465,7 @@ def update_goods_parser(args, fn, linebase, lines):
                     isValid = False
                     break
 
-                if args.lowercase_valkeys:
+                if args.lowercase_key:
                     v_obj[vk.lower()] = update_j[vk]
                 else:
                     v_obj[vk] = update_j[vk]
@@ -477,7 +475,9 @@ def update_goods_parser(args, fn, linebase, lines):
                 continue
         else:
             for k, v in update_j.iteritems():
-                if args.lowercase_valkeys:
+                if args.lowercase_key:
+                    v_obj[k.lower()] = v
+                else:
                     v_obj[k] = v
 
         v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
@@ -572,8 +572,7 @@ if '__main__' == __name__:
     parser.add_argument("-t", default="{0}".format(jkey_t), help="the key for table/mode name, default: {0}".format(jkey_t))
     parser.add_argument("-k", default="{0}".format(jkey_k), help="the key for key/gid/item id, default: {0}".format(jkey_k))
     parser.add_argument("-v", "--valkeys", action='append', help="the key for value/rule content, default: all")
-    parser.add_argument("-lk", "--lowercase_idkey", action='store_true', help="lower case the key of key/gid/item id, default: false")
-    parser.add_argument("-lv", "--lowercase_valkeys", action='store_true', help="lower case the key of value/rule, default: false")
+    parser.add_argument("-lk", "--lowercase_key", action='store_true', help="lower case the all keys of the item, e.g. gid, goods_name, category_code and etc, default: false")
     parser.add_argument("-dt", "--datetimekey", help="source json key of datetime field for sorted set score")
     parser.add_argument("-ttl", "--ttl", type=int, default=259200, help='live time of keys')
     parser.add_argument("-d", "--deamon", action='store_true', help='start as deamon mode')
