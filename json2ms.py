@@ -156,7 +156,7 @@ def pipe_file(args, parser_cbf):
             with open(fn, 'r') as f:
                 linenum = 0
                 while True:
-                    lines = f.readlines(30 * 1024 * 1024)
+                    lines = f.readlines(10 * 1024 * 1024)
                     if 0 < len(lines):
                         parser_cbf(args, fn, linenum, lines)
                     else:
@@ -304,6 +304,9 @@ def goccmod_parser(args, fn, linebase, lines):
     m = re.search(r'[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', fn)
     if m:
         date = m.group(0)
+    else:
+        logging.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
+        return
                     
     tuple_list = []
     for linenum, l in enumerate(lines, 1):
@@ -327,10 +330,7 @@ def goccmod_parser(args, fn, linebase, lines):
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
-            if date:
-                k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
-            else:
-                k = '/{c}_{ic}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, t=j[jkey_t], k=idkey, i=j[jkey_k])
+            k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
 
             v_obj = {}
             if jkeys_vals:
@@ -397,6 +397,9 @@ def update_goods_parser(args, fn, linebase, lines):
     m = re.search(r'[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])', fn)
     if m:
         date = m.group(0)
+    else:
+        logging.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
+        return
                     
     tuple_list = []
     for linenum, l in enumerate(lines, 1):
@@ -415,11 +418,11 @@ def update_goods_parser(args, fn, linebase, lines):
                 logging.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
                 continue
 
-###            if jkeys_vals:
-###                for valkey in jkeys_vals:
-###                    if not valkey in j:
-###                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
-###                        continue
+            if jkeys_vals:
+                for valkey in jkeys_vals:
+                    if not valkey in j:
+                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
+                        continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
             k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic='gocc', d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
