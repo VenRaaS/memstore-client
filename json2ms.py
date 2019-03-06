@@ -348,12 +348,13 @@ def goccmod_parser(args, fn, linebase, lines):
             v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
             rdscmds = []
+#TODO... without limit table name
             if 'goods' == j[args.t] or \
                'category' == j[args.t] or \
                'cooc_pn' == j[args.t] or \
                'vig' == j[args.t] or \
                'tp' == j[args.t] or \
-               'cppn' == j[args.t]:
+               'cppn_i2i' == j[args.t]:
                 rdscmds.append((RedisCommand.lpush, k, v))
                 rdscmds.append((RedisCommand.ltrim, k, 0, 0))
                 rdscmds.append((RedisCommand.expire, k, args.ttl))
@@ -378,6 +379,8 @@ def goccmod_parser(args, fn, linebase, lines):
                     rdscmds.append((RedisCommand.zadd, k, score, v))
                     rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
                     rdscmds.append((RedisCommand.expire, k, args.ttl))
+            else:
+                logging.error('[{t}] is not supported so far.'.format(t=j[args.t]))
 
             tuple_list.append((args, rdscmds))
         except Exception as e:
@@ -409,8 +412,6 @@ def update_goods_parser(args, fn, linebase, lines):
             if not jkey_c in j:
                 logging.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
                 continue
-#TODO... add table_name to json
-            j['table_name'] = 'goods'
             if not jkey_t in j:
                 logging.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
                 continue
@@ -450,8 +451,6 @@ def update_goods_parser(args, fn, linebase, lines):
     for linenum, l in enumerate(lines, 1):
         update_j = json.loads(l)
 
-#TODO... add table_name to json
-        update_j['table_name'] = 'goods'
         k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=update_j[jkey_c], ic='gocc', d=date, t=update_j[jkey_t], k=idkey, i=update_j[jkey_k])
 
         v_obj = {}
