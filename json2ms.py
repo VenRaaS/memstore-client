@@ -99,7 +99,7 @@ def tail_file(args, parser_cbf, seconds_sleep=3):
     try:
         while True:
             while True:
-                lines = cur_f.readlines(10 * 1024 * 1024)
+                lines = cur_f.readlines(20 * 1024 * 1024)
 #                print lines
                 if 0 < len(lines):
                     parser_cbf(args, fname, 0, lines)
