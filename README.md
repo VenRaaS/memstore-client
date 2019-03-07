@@ -174,4 +174,4 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 * [An introduction to Redis data types and abstractions](https://redis.io/topics/data-types-intro)
 * [Redis: under the hood](https://pauladamsmith.com/articles/redis-under-the-hood.html)
 * [JSON String Escape / Unescape](https://www.freeformatter.com/json-escape.html)
-
+* [How to fix redis busy](http://granitosaurus.rocks/redis-busy.html)
