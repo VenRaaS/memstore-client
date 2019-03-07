@@ -35,51 +35,63 @@ expire_sec_mpv = Value('i', 0)
 def rds_pipe_worker(tuple_list):
     resp_list = []
 
-    try:
-        #-- disable the atomic nature of a pipeline
-        #   see https://github.com/andymccurdy/redis-py#pipelines
-        with rds.pipeline(transaction=False) as pipe:
-            for args, rdscmds in tuple_list:
-                for cmd in rdscmds:
-                    if RedisCommand.append == cmd[0]:
-                        k, v = cmd[1:] 
-                        pipe.append(k, '{_v},'.format(_v=v))
-                    elif RedisCommand.set == cmd[0]:
-                        k, v = cmd[1:] 
-                        pipe.set(k, v)
-                    elif RedisCommand.get == cmd[0]:
-                        k = cmd[1] 
-                        pipe.get(k)
-                    elif RedisCommand.rpush == cmd[0]:
-                        k, v = cmd[1:] 
-                        pipe.rpush(k, v)
-                    elif RedisCommand.lpush == cmd[0]:
-                        k, v = cmd[1:] 
-                        pipe.lpush(k, v)
-                    elif RedisCommand.lrange == cmd[0]:
-                        k, start, stop = cmd[1:]
-                        pipe.lrange(k, start, stop)
-                    elif RedisCommand.ltrim == cmd[0]:
-                        k, start, stop = cmd[1:]
-                        pipe.ltrim(k, start, stop)
-                    elif RedisCommand.expire == cmd[0]:
-                        k, v = cmd[1:] 
-                        pipe.expire(k, v)
-                    elif RedisCommand.zadd == cmd[0]:
-                        k, s, v = cmd[1:] 
-                        pipe.zadd(k, s, v)
-                    elif RedisCommand.zremrangebyscore == cmd[0]:
-                        k, minscore, maxscore = cmd[1:]
-                        pipe.zremrangebyscore(k, minscore, maxscore)
-                    elif RedisCommand.zremrangebyrank == cmd[0]:
-                        k, start, stop = cmd[1:]
-                        pipe.zremrangebyrank(k, start, stop)
+    wait_sec = 0
+    retry_sec = 300
+    while wait_sec < retry_sec:
+        try:
+            #-- disable the atomic nature of a pipeline
+            #   see https://github.com/andymccurdy/redis-py#pipelines
+            with rds.pipeline(transaction=False) as pipe:
+                for args, rdscmds in tuple_list:
+                    for cmd in rdscmds:
+                        if RedisCommand.append == cmd[0]:
+                            k, v = cmd[1:] 
+                            pipe.append(k, '{_v},'.format(_v=v))
+                        elif RedisCommand.set == cmd[0]:
+                            k, v = cmd[1:] 
+                            pipe.set(k, v)
+                        elif RedisCommand.get == cmd[0]:
+                            k = cmd[1] 
+                            pipe.get(k)
+                        elif RedisCommand.rpush == cmd[0]:
+                            k, v = cmd[1:] 
+                            pipe.rpush(k, v)
+                        elif RedisCommand.lpush == cmd[0]:
+                            k, v = cmd[1:] 
+                            pipe.lpush(k, v)
+                        elif RedisCommand.lrange == cmd[0]:
+                            k, start, stop = cmd[1:]
+                            pipe.lrange(k, start, stop)
+                        elif RedisCommand.ltrim == cmd[0]:
+                            k, start, stop = cmd[1:]
+                            pipe.ltrim(k, start, stop)
+                        elif RedisCommand.expire == cmd[0]:
+                            k, v = cmd[1:] 
+                            pipe.expire(k, v)
+                        elif RedisCommand.zadd == cmd[0]:
+                            k, s, v = cmd[1:] 
+                            pipe.zadd(k, s, v)
+                        elif RedisCommand.zremrangebyscore == cmd[0]:
+                            k, minscore, maxscore = cmd[1:]
+                            pipe.zremrangebyscore(k, minscore, maxscore)
+                        elif RedisCommand.zremrangebyrank == cmd[0]:
+                            k, start, stop = cmd[1:]
+                            pipe.zremrangebyrank(k, start, stop)
 
-            resp_list = pipe.execute()
-#            logging.info('pipelining {:,} rows'.format(len(tuple_list)))
-            logging.info('pipelining {0} rows'.format(len(tuple_list)))
-    except KeyboardInterrupt as e:
-        logging.error(e, exc_info=True)
+                resp_list = pipe.execute()
+#                logging.info('pipelining {:,} rows'.format(len(tuple_list)))
+                logging.info('pipelining {0} rows'.format(len(tuple_list)))
+                retry_sec = 0
+
+        except redis.ResponseError as e:
+            if 'redis is busy running a script' in str(e).lower():
+                logging.warn('redis is busy, wait a second to retry ...')
+                time.sleep(10)
+                wait_sec += 10
+
+        except KeyboardInterrupt as e:
+            logging.error(e, exc_info=True)
+            retry_sec = 0
 
     return resp_list
 
@@ -348,39 +360,24 @@ def goccmod_parser(args, fn, linebase, lines):
             v = json.dumps(v_obj, ensure_ascii=False).encode('utf8')
 
             rdscmds = []
-#TODO... without limit table name
-            if 'goods' == j[args.t] or \
-               'category' == j[args.t] or \
-               'cooc_pn' == j[args.t] or \
-               'vig' == j[args.t] or \
-               'tp' == j[args.t] or \
-               'cppn_i2i' == j[args.t]:
+            #-- push data to list
+            if not args.datetimekey:
                 rdscmds.append((RedisCommand.lpush, k, v))
                 rdscmds.append((RedisCommand.ltrim, k, 0, 0))
                 rdscmds.append((RedisCommand.expire, k, args.ttl))
-            elif 'breadcrumb' == j[args.t] or \
-                 'goods_category_flatten' == j[args.t]:
-
-                #-- push data to list
-                if not args.datetimekey:
-                    rdscmds.append((RedisCommand.lpush, k, v))
-                    rdscmds.append((RedisCommand.ltrim, k, 0, 0))
-                    rdscmds.append((RedisCommand.expire, k, args.ttl))
-                #-- add data to sorted set
-                else:
-                    if args.datetimekey not in j:
-                        logging.error('args.datetimekey is not found at line:{} in {}'.format(linenum+linebase, fn))
-                        continue
-
-                    # extract YYYYMMDD as score
-                    dt = j[args.datetimekey]
-                    score = float(re.sub('[- ]', '', dt)[:8])
-                    score_yest = score - 1
-                    rdscmds.append((RedisCommand.zadd, k, score, v))
-                    rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
-                    rdscmds.append((RedisCommand.expire, k, args.ttl))
+            #-- add data to sorted set
             else:
-                logging.error('[{t}] is not supported so far.'.format(t=j[args.t]))
+                if args.datetimekey not in j:
+                    logging.error('args.datetimekey is not found at line:{} in {}'.format(linenum+linebase, fn))
+                    continue
+
+                # extract YYYYMMDD as score
+                dt = j[args.datetimekey]
+                score = float(re.sub('[- ]', '', dt)[:8])
+                score_yest = score - 1
+                rdscmds.append((RedisCommand.zadd, k, score, v))
+                rdscmds.append((RedisCommand.zremrangebyscore, k, '-inf', score_yest))
+                rdscmds.append((RedisCommand.expire, k, args.ttl))
 
             tuple_list.append((args, rdscmds))
         except Exception as e:
