@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(line
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = 'ms-node-01'
 PORT_RDS = '6379'
-TIMEOUT_IN_SEC = 1
+TIMEOUT_IN_SEC = 10
 rds = redis.StrictRedis(host=HOST_RDS, port=6379, socket_connect_timeout=TIMEOUT_IN_SEC)
 
 
