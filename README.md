@@ -182,9 +182,9 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 * maxmemory-policy: `volatile-ttl`
 
 ## Speed-up count of keys matching a pattern
-![](https://drive.google.com/open?id=1BzHXqX5HAYgGBOpteUCXxmZuvIX51cs6)
+![](https://drive.google.com/uc?id=1BzHXqX5HAYgGBOpteUCXxmZuvIX51cs6)
 
-![](https://drive.google.com/open?id=1Xwn6F8K8srAJSXYtOI--ZcQktWn0UPts)
+![](https://drive.google.com/uc?id=1Xwn6F8K8srAJSXYtOI--ZcQktWn0UPts)
 
 ## Reference
 * [Cloud Memorystore](https://cloud.google.com/memorystore/)
