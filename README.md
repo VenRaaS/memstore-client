@@ -42,8 +42,10 @@
 * category  
   `python json2ms -k category_code -v category_code -v le -v category_code -v p_category_code -v update_time -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
 
-
-* help 
+* log of [venapis](https://github.com/VenRaaS/venapis)  
+  `python json2ms.py -ttl 7776000 -d data weblog tail`
+  
+* help  
   `python json2ms.py -h`
 
 ## Data type and commands
