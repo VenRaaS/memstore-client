@@ -11,10 +11,6 @@
 ### Achievement
 
 ## Client
-
-### json2ms.py
-USAGE...
-
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
 * connect to redis  
   `nc -v ${HOST} ${PORT}`, e.g. `nc -v ms-westernwall 6379`
@@ -38,6 +34,9 @@ USAGE...
 ### [jedis](https://github.com/xetorthio/jedis/wiki)
 
 ### [redis-py](https://github.com/andymccurdy/redis-py)
+
+### json2ms.py
+USAGE TODO...
 
 ## Data type and commands
 * [Strings](https://redis.io/topics/data-types#strings) - Redis Strings are binary safe.
