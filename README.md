@@ -40,11 +40,17 @@
   `python json2ms -k gid -v gid -v availability -v sale_price -v goods_name -v goods_img_url -v update_time -lk -ttl 15552000 sohappy_goods_20190311.json gocc pipe`
   
 * category  
-  `python json2ms -k category_code -v category_code -v le -v category_code -v p_category_code -v update_time -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
+  `python json2ms.py -k category_code -v category_code -v le -v category_code -v p_category_code -v update_time -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
 
-* log of [venapis](https://github.com/VenRaaS/venapis)  
-  `python json2ms.py -ttl 7776000 -d data weblog tail`
+* tp  
+  `python json2ms.py -k category_code -v indicators_raw -ttl 15552000 all_TP_dump_20190311.json mod pipe`
   
+* cooc_pn  
+  `python ${path_json2mspy} -k gid -v indicators_raw -v insert_dt -ttl 15552000 all_CoOc_pn_dump_20190311.json mod pipe`
+
+* log of [venapis](https://github.com/VenRaaS/venapis)    
+  `python json2ms.py -ttl 7776000 -d data weblog tail`
+
 * help  
   `python json2ms.py -h`
 
