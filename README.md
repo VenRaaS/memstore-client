@@ -36,7 +36,9 @@
 ### [redis-py](https://github.com/andymccurdy/redis-py)
 
 ### [json2ms.py](https://github.com/VenRaaS/memstore-client/blob/master/json2ms.py)
-USAGE TODO...
+* help  
+  `python json2ms.py -h`
+
 
 ## Data type and commands
 * [Strings](https://redis.io/topics/data-types#strings) - Redis Strings are binary safe.
