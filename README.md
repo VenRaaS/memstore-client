@@ -196,7 +196,7 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 ![](https://drive.google.com/uc?id=1BzHXqX5HAYgGBOpteUCXxmZuvIX51cs6)
 
 * enlarge [COUNT option](https://redis.io/commands/scan#the-count-option) to specify the amount of work that should be done at every call (reduce RTT).
-* or, use lua scipt to minimize RTT effects.
+* or, use [lua scipt](https://github.com/VenRaaS/memstore-client/blob/master/lua_scan.py) to minimize RTT effects.
 
 ![](https://drive.google.com/uc?id=1Xwn6F8K8srAJSXYtOI--ZcQktWn0UPts)
 
