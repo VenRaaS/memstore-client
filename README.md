@@ -191,7 +191,7 @@ where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `$
 * maxmemory-policy: `volatile-ttl`
 
 ## Speed-up count of keys matching a pattern
-* default [COUNT option](https://redis.io/commands/scan#the-count-option) with large *round trip time* in execution.
+* default [COUNT option](https://redis.io/commands/scan#the-count-option) with large **round trip time** in execution.
 
 ![](https://drive.google.com/uc?id=1BzHXqX5HAYgGBOpteUCXxmZuvIX51cs6)
 
