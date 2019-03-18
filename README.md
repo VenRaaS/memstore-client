@@ -17,10 +17,10 @@
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
 * connect to redis  
   `nc -v ${HOST} ${PORT}`, e.g. `nc -v ms-westernwall 6379`
-* installation under ubuntu  
+* installation under Ubuntu  
   `ubuntu - `apt-get install netcat`
-* installation under centos  
-  `yum install nc.x86_64`
+* installation under Centos  
+  `yum install nc.x86_64` for 6.x or `yum install nmap-ncat.x86_64` for 7
 
 ### [redis-cli](https://redis.io/topics/rediscli)
 * connect to redis  
