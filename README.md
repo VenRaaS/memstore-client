@@ -128,32 +128,23 @@
     * Key format example
       * `["comp01_mod_20190202","tp","categ_code01"]`
       * `["comp01_mod_20190202","i2i_cooc","gid01"]`
-* goods_category_flatten
+
+* breadcrumb / goods_category_flatten
   * `["${code_name}_mod_${date}","goods_category_flatten","${gid}"]` => [json] 
   * ~~`/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
       * `LRANGE ${key} 0 -1`
     * Key format example
-      * `["comp01_mod_20190202","goods_category_flatten","gid01"]`
-* breadcrumb
-  * `["${code_name}_mod_${date}","breadcrumb","${gid}"]` => [json]
-  * ~~`/${code_name}_mod_${date}/breadcrumb/_search?q=gid:${gid}` => [json, json, ...]~~
-    * MS query format
-      * `LRANGE ${key} 0 -1`
-    * Key format example
       * `["comp01_mod_20190202","breadcrumb","gid01"]`
-* category_statistic
-  * `["${code_name}_mod_${date}","category_statistic","${categ_code}"]` => [json]
+      * `["comp01_mod_20190202","goods_category_flatten","gid01"]`
+
+* category_statistic / goods_statistic
+  * `["${code_name}_mod_${date}","${table_name}","${id}"]` => [json]
     * MS query format
-      * `LRANGE ${key} 0 -1`
+      * `LRANGE ${key} 0 0`
     * Key format example
-      * `["comp01_mod_20190202","category_statistic","categ_code01"]`      
- * goods_statistic
-  * `["${code_name}_mod_${date}","goods_statistic","${gid}"]` => [json]
-    * MS query format
-      * `LRANGE ${key} 0 -1`
-    * Key format example
-      * `["comp01_mod_20190202","goods_statistic","gid01"]`           
+      * `["comp01_mod_20190202","category_statistic","categ_code01"]`
+      * `["comp01_mod_20190202","goods_statistic","gid01"]`
 
 ### opp
 * ~~`/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
