@@ -133,7 +133,7 @@
   * `["${code_name}_mod_${date}","goods_category_flatten","${gid}"]` => [json] 
   * ~~`/${code_name}_mod_${date}/goods_category_flatten/_search?q=gid:${gid}` => [json, json, ...]~~
     * MS query format
-      * `LRANGE ${key} 0 -1`
+      * `LRANGE ${key} 0 0`
     * Key format example
       * `["comp01_mod_20190202","breadcrumb","gid01"]`
       * `["comp01_mod_20190202","goods_category_flatten","gid01"]`
