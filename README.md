@@ -120,7 +120,7 @@
       * `["comp01_gocc_20190202","category","categ_code01"]`
   
 ### mod
-* c2i_model / i2i_model / ...
+* c2i_model / i2i_model / i2t_model / u2t_model ...
   * `["${code_name}_mod_${date}","${table_name}","${id}"]` => [json]
   * ~~`/${code_name}_mod_${date}/${table_name}/_search?q=${id_key}:${id}` => [json]~~
     * MS query format
@@ -129,6 +129,7 @@
       * `["comp01_mod_20190202","tp","categ_code01"]`
       * `["comp01_mod_20190202","i2i_cooc","gid01"]`
       * `["comp01_mod_20190202","i2t","gid01"]`
+      * `["comp01_mod_20190202","u2t","uid01"]`
 
 * breadcrumb / goods_category_flatten
   * `["${code_name}_mod_${date}","goods_category_flatten","${gid}"]` => [json] 
