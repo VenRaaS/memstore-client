@@ -128,6 +128,7 @@
     * Key format example
       * `["comp01_mod_20190202","tp","categ_code01"]`
       * `["comp01_mod_20190202","i2i_cooc","gid01"]`
+      * `["comp01_mod_20190202","i2t","gid01"]`
 
 * breadcrumb / goods_category_flatten
   * `["${code_name}_mod_${date}","goods_category_flatten","${gid}"]` => [json] 
