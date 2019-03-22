@@ -142,6 +142,19 @@
       * `LRANGE ${key} 0 -1`
     * Key format example
       * `["comp01_mod_20190202","breadcrumb","gid01"]`
+* category_statistic
+  * `["${code_name}_mod_${date}","category_statistic","${categ_code}"]` => [json]
+    * MS query format
+      * `LRANGE ${key} 0 -1`
+    * Key format example
+      * `["comp01_mod_20190202","category_statistic","categ_code01"]`      
+ * goods_statistic
+  * `["${code_name}_mod_${date}","goods_statistic","${gid}"]` => [json]
+    * MS query format
+      * `LRANGE ${key} 0 -1`
+    * Key format example
+      * `["comp01_mod_20190202","goods_statistic","gid01"]`           
+
 ### opp
 * ~~`/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * ~~MS query format~~
