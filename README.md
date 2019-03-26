@@ -162,6 +162,13 @@ Evicts the keys with the shortest TTL whenever redis instance memory is full.
       * `["comp01_mod_20190202","category_statistic","categ_code01"]`
       * `["comp01_mod_20190202","goods_statistic","gid01"]`
 
+* vig
+  * `["${code_name}_mod_${date}","${table_name}","${id}"]` => [json]
+    * MS query format
+      * `LRANGE ${key} 0 0`
+    * Key format example
+      * `["comp01_mod_20190202","vig","gid01"]`
+
 ### opp
 * ~~`/${code_name}_opp/OnlinePref/_search_last_gop_ops?q=ven_guid:${ven_guid}` => [json_action(t), json_action(t-1), ... ]~~
   * ~~MS query format~~
