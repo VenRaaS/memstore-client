@@ -1,5 +1,11 @@
 ## TOC
 * [Overview](#overview)
+* [Why we need memorystore](#why-we-need-memorystore)
+* [Server](server)
+* [Client](client)
+* [Data type and commands](data-type-and-commands)
+* [Key and value schema for data access in VenRaaS](key-and-value-schema-for-data-access-in-venraas)
+* [Speed-up count of keys matching a pattern](speed-up-count-of-keys-matching-a-pattern)
 
 ## Overview
 ![](https://drive.google.com/uc?id=1DsmJmeIIVFPmYGvf9rZ6f8xgNY1MitwI)
