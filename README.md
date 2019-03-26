@@ -15,7 +15,8 @@
 
 ## Server
 ### [Maxmemory policies](https://cloud.google.com/memorystore/docs/reference/redis-configs#maxmemory_policies)
-* maxmemory-policy: `volatile-ttl`
+* maxmemory-policy: `volatile-ttl`  
+Evicts the keys with the shortest TTL whenever redis instance memory is full.
 
 ## Client
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
