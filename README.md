@@ -13,6 +13,10 @@
 
 ![](https://drive.google.com/uc?id=1ry4-zS8NGuJZkQCTs9iZxKzUXtos8Pir)
 
+## Server
+### [Maxmemory policies](https://cloud.google.com/memorystore/docs/reference/redis-configs#maxmemory_policies)
+* maxmemory-policy: `volatile-ttl`
+
 ## Client
 ### [netcat](https://en.wikipedia.org/wiki/Netcat)
 * connect to redis  
@@ -192,9 +196,6 @@
     * `["comp01_oua","uid2guids","uid01"]`
 
 where `${id_name}` stands for id field name, e.g.gid, category_code, ..., and `${id}` is the value.
-
-## [Maxmemory policies](https://cloud.google.com/memorystore/docs/reference/redis-configs#maxmemory_policies)
-* maxmemory-policy: `volatile-ttl`
 
 ## Speed-up count of keys matching a pattern
 * default [COUNT option](https://redis.io/commands/scan#the-count-option) with large **round trip time** in execution.
