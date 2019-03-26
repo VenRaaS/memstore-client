@@ -235,12 +235,9 @@ def weblog_parser(args, fn, linebase, lines):
                     
                     #-- oua
                     if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
-###                        k = '/{c}_oua/OnlineUserAlign/_search_last_login_uid?q=ven_guid:{i}'.format(
-###                            c = cn, i = js['ven_guid'])
                         k = ['{c}_oua'.format(c=cn), 'guid2uid', js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'uid':js['uid']}
-###                        v_obj['ven_guid'] = js['ven_guid']
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         if logdt:
                             score = float(re.sub('[- :T]', '', logdt)[:14])
@@ -250,12 +247,9 @@ def weblog_parser(args, fn, linebase, lines):
                         else:
                             logging.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
-###                        k = '/{c}_oua/OnlineUserAlign/_search_last_ven_guids?q=uid:{i}'.format(
-###                            c = cn, i = js['uid'])
                         k = ['{c}_oua'.format(c=cn), 'uid2guids', js['uid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'ven_guid':js['ven_guid']}
-###                        v_obj['uid'] = js['uid']
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         if logdt:
                             score = float(re.sub('[- :T]', '', logdt)[:14])
@@ -269,12 +263,9 @@ def weblog_parser(args, fn, linebase, lines):
                     if 'pageload' == act and 'ven_guid' in js \
                         and 'gid' in js and 'categ_code' in js \
                         and js['gid'] and js['categ_code']:
-###                        k = '/{c}_opp/OnlinePref/{act}/_search_last_gop_ops?q=ven_guid:{i}'.format(
-###                            c = cn, act = act, i = js['ven_guid'])
                         k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
-###                        v_obj['ven_guid'] = js['ven_guid']
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
                         rdscmds.append((RedisCommand.lpush, k, v))
@@ -285,12 +276,9 @@ def weblog_parser(args, fn, linebase, lines):
                     if 'checkout' == act \
                         and 'trans_i' in js and js['trans_i'] \
                         and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
-###                        k = '/{c}_opp/OnlinePref/{act}/_search_last_checkout_gids?q=ven_guid:{i}'.format(
-###                            c = cn, act = act, i = js['ven_guid'])
                         k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'trans_i':js['trans_i']}
-###                        v_obj['ven_guid'] = js['ven_guid']
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
                         rdscmds.append((RedisCommand.lpush, k, v))
@@ -301,12 +289,9 @@ def weblog_parser(args, fn, linebase, lines):
                     if 'unfavadd' == act \
                         and 'ven_guid' in js and 'gid' in js \
                         and js['ven_guid'] and js['gid']:
-###                        k = '/{c}_opp/OnlinePref/{act}?q=ven_guid:{i}'.format(
-###                            c = cn, act = act, i = js['ven_guid'])
                         k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'gid':js['gid']}
-###                        v_obj['ven_guid'] = js['ven_guid']
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
                         rdscmds.append((RedisCommand.lpush, k, v))
@@ -358,7 +343,6 @@ def goccmod_parser(args, fn, linebase, lines):
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
-###            k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic=args.index_cat, d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
             k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic=args.index_cat, d=date), j[jkey_t], j[jkey_k]]
             k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
@@ -441,7 +425,6 @@ def update_goods_parser(args, fn, linebase, lines):
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
-###            k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=j[jkey_c], ic='gocc', d=date, t=j[jkey_t], k=idkey, i=j[jkey_k])
             k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic=args.index_cat, d=date), j[jkey_t], j[jkey_k]]
             k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
@@ -468,7 +451,6 @@ def update_goods_parser(args, fn, linebase, lines):
     for linenum, l in enumerate(lines, 1):
         update_j = json.loads(l)
 
-###        k = '/{c}_{ic}_{d}/{t}/_search?q={k}:{i}'.format(c=update_j[jkey_c], ic='gocc', d=date, t=update_j[jkey_t], k=idkey, i=update_j[jkey_k])
         k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic=args.index_cat, d=date), j[jkey_t], j[jkey_k]]
         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
