@@ -9,7 +9,7 @@ import subprocess
 import time
 import re
 from multiprocessing import Pool, Value
-
+from distutils.version import StrictVersion
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
@@ -24,6 +24,7 @@ SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC = 300
 
 expire_sec_mpv = Value('i', 0)
 
+IS_REDIS_LE_VER3 = StrictVersion('3.0') <= StrictVersion(redis.__version__)
 
 
 ##
@@ -69,8 +70,13 @@ def rds_pipe_worker(tuple_list):
                             k, v = cmd[1:] 
                             pipe.expire(k, v)
                         elif RedisCommand.zadd == cmd[0]:
-                            k, s, v = cmd[1:] 
-                            pipe.zadd(k, s, v)
+                            k, s, v = cmd[1:]
+                            #-- input parameters have changed since 3.0
+                            #   see https://github.com/andymccurdy/redis-py/blob/master/CHANGES#L100
+                            if IS_REDIS_LE_VER3:
+                                pipe.zadd(k, {v:s})
+                            else:
+                                pipe.zadd(k, s, v)
                         elif RedisCommand.zremrangebyscore == cmd[0]:
                             k, minscore, maxscore = cmd[1:]
                             pipe.zremrangebyscore(k, minscore, maxscore)
