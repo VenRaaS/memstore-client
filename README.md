@@ -54,10 +54,10 @@ Evicts the keys with the shortest TTL whenever redis instance memory is full.
 
 ### [json2ms.py](https://github.com/VenRaaS/memstore-client/blob/master/json2ms.py)
 * goods  
-  `python json2ms -k gid -v gid -v availability -v sale_price -v goods_name -v goods_img_url -v update_time -lk -ttl 15552000 sohappy_goods_20190311.json gocc pipe`
+  `python json2ms.py -k gid -v availability -v sale_price -v goods_name -v goods_img_url -v update_time -lk -ttl 15552000 sohappy_goods_20190311.json gocc pipe`
   
 * category  
-  `python json2ms.py -k category_code -v category_code -v le -v category_code -v p_category_code -v update_time -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
+  `python json2ms.py -k category_code  -v le -v category_code -v p_category_code -v update_time -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
 
 * tp  
   `python json2ms.py -k category_code -v indicators_raw -ttl 15552000 all_TP_dump_20190311.json mod pipe`
