@@ -225,7 +225,7 @@ def weblog_parser(args, fn, linebase, lines):
 
             rdscmds = []
             #-- iter k, v, e.g. "code_name":[...], "agent":[...], "api_logtime":[...], ...
-            for k, v in js.iteritems():
+            for k, v in js.iteritems() if hasattr(js, 'iteritems') else js.items():
                 #-- find action content payload, e.g. "pageload":["{...}"]
                 if 0 < len(v) \
                      and (isinstance(v[0], str) or isinstance(v[0], unicode)) \
@@ -477,7 +477,7 @@ def update_goods_parser(args, fn, linebase, lines):
             if not isValid:
                 continue
         else:
-            for k, v in update_j.iteritems():
+            for k, v in update_j.iteritems() if hasattr(update_j, 'iteritems') else update_j.items():
                 if args.lowercase_key:
                     v_obj[k.lower()] = v
                 else:
