@@ -278,7 +278,7 @@ def weblog_parser(args, fn, linebase, lines):
                         and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
                         k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'trans_i':js['trans_i']}
+                        v_obj = {'trans_i':js['trans_i'], 'insert_dt':logdt}
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
                         rdscmds.append((RedisCommand.lpush, k, v))
