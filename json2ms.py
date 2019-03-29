@@ -25,6 +25,8 @@ SLEEP_FOR_FILE_CHANGE_DETECTION_IN_SEC = 300
 expire_sec_mpv = Value('i', 0)
 
 IS_REDIS_LE_VER3 = StrictVersion('3.0') <= StrictVersion(redis.__version__)
+IS_PYTHON_LE_VER27 = StrictVersion('2.7') <= StrictVersion(sys.version.split()[0])
+
 
 
 ##
@@ -85,8 +87,10 @@ def rds_pipe_worker(tuple_list):
                             pipe.zremrangebyrank(k, start, stop)
 
                 resp_list = pipe.execute()
-#                logging.info('pipelining {:,} rows'.format(len(tuple_list)))
-                logging.info('pipelining {0} rows'.format(len(tuple_list)))
+                if IS_PYTHON_LE_VER27:
+                    logging.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
+                else
+                    logging.info('pipelining {num} rows'.format(num=len(tuple_list)))
                 retry_sec = 0
 
         except redis.ResponseError as e:
@@ -169,8 +173,10 @@ def pipe_file(args, parser_cbf):
                 for i, l in enumerate(f, 1):
                     linnum_src = i
                     pass
-#            logging.info('{} has {:,.0f} records'.format(fn, linnum_src))
-            logging.info('{fn} has {lnum} records'.format(fn=fn, lnum=linnum_src))
+            if IS_PYTHON_LE_VER27:
+                logging.info('{fn} has {lnum:,.0f} records'.format(fn=fn, lnum=linnum_src))
+            else:
+                logging.info('{fn} has {lnum} records'.format(fn=fn, lnum=linnum_src))
             
             with open(fn, 'r') as f:
                 linenum = 0.0
@@ -182,8 +188,10 @@ def pipe_file(args, parser_cbf):
                         break
 
                     linenum += len(lines)
-#                    logging.info('{:,.0f} {:,.0f}%'.format(linenum, linenum / linnum_src * 100))
-                    logging.info('{lnum} {perc}%'.format(lnum=linenum, perc=round(linenum / linnum_src * 100,1)))
+                    if IS_PYTHON_LE_VER27:
+                        logging.info('{lnum:,.0f} {pct:,.0f}%'.format(lnum=linenum, pct=linenum / linnum_src * 100))
+                    else:
+                        logging.info('{lnum} {pct}%'.format(lnum=linenum, pct=round(linenum / linnum_src * 100,1)))
 
         if not args.deamon:
             break
