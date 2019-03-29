@@ -163,13 +163,14 @@ def pipe_file(args, parser_cbf):
                         logging.info('{n} has not change detected'.format(n=fn))
                         continue
 
-            logging.info('{} counting ...'.format(fn))
+            logging.info('{fn} counting ...'.format(fn=fn))
             linnum_src = 0.0
             with open(fn, 'r') as f:
                 for i, l in enumerate(f, 1):
                     linnum_src = i
                     pass
-            logging.info('{} has {:,.0f} records'.format(fn, linnum_src))
+#            logging.info('{} has {:,.0f} records'.format(fn, linnum_src))
+            logging.info('{fn} has {lnum} records'.format(fn=fn, lnum=linnum_src))
             
             with open(fn, 'r') as f:
                 linenum = 0.0
@@ -181,7 +182,8 @@ def pipe_file(args, parser_cbf):
                         break
 
                     linenum += len(lines)
-                    logging.info('{:,.0f} {:,.0f}%'.format(linenum, linenum / linnum_src * 100))
+#                    logging.info('{:,.0f} {:,.0f}%'.format(linenum, linenum / linnum_src * 100))
+                    logging.info('{lnum} {perc}%'.format(lnum=linenum, perc=round(linenum / linnum_src * 100,1)))
 
         if not args.deamon:
             break
