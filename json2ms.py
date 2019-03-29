@@ -89,7 +89,7 @@ def rds_pipe_worker(tuple_list):
                 resp_list = pipe.execute()
                 if IS_PYTHON_LE_VER27:
                     logging.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
-                else
+                else:
                     logging.info('pipelining {num} rows'.format(num=len(tuple_list)))
                 retry_sec = 0
 
@@ -464,7 +464,7 @@ def update_goods_parser(args, fn, linebase, lines):
         
         k = ['{c}_{ic}_{d}'.format(c=update_j[jkey_c], ic='gocc', d=date), update_j[jkey_t], update_j[jkey_k]]
         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-        
+
         v_obj = {}
         gid = update_j[jkey_k]
         if gid in msGoods_dic:
