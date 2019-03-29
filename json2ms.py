@@ -402,7 +402,8 @@ def update_goods_parser(args, fn, linebase, lines):
     else:
         logging.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
         return
-                    
+                  
+    #-- get keys from update json file   
     tuple_list = []
     for linenum, l in enumerate(lines, 1):
         try:
@@ -425,7 +426,7 @@ def update_goods_parser(args, fn, linebase, lines):
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
-            k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic=args.index_cat, d=date), j[jkey_t], j[jkey_k]]
+            k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic='gocc', d=date), j[jkey_t], j[jkey_k]]
             k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
             rdscmds = []
@@ -445,15 +446,15 @@ def update_goods_parser(args, fn, linebase, lines):
             j = json.loads(l[0])
             if 'gid' in j:
                 msGoods_dic[ j['gid'] ] = j
-    
+ 
     #-- upsert goods into ms
     tuple_list = []
     for linenum, l in enumerate(lines, 1):
         update_j = json.loads(l)
-
-        k = ['{c}_{ic}_{d}'.format(c=j[jkey_c], ic=args.index_cat, d=date), j[jkey_t], j[jkey_k]]
+        
+        k = ['{c}_{ic}_{d}'.format(c=update_j[jkey_c], ic='gocc', d=date), update_j[jkey_t], update_j[jkey_k]]
         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-
+        
         v_obj = {}
         gid = update_j[jkey_k]
         if gid in msGoods_dic:
