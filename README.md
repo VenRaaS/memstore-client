@@ -59,6 +59,13 @@ Evicts the keys with the shortest TTL whenever redis instance memory is full.
 * category  
   `python json2ms.py -k category_code  -v le -v p_category_code  -lk -ttl 15552000 sohappy_category_20190311.json gocc pipe`
 
+* GCF  
+```
+  path_json2mspy="/home/itri/memstore-client/json2ms.py"                                                                     
+  path_jsondata="/home/itri/daily_model_output/all_GCF_dump_$(date +%Y%m%d)*.json"                                           
+  python ${path_json2mspy} -k gid -v category_info_list -ttl 5184000 "${path_jsondata}" mod pipe
+``` 
+
 * tp  
   `python json2ms.py -k category_code -v indicators_raw -ttl 15552000 all_TP_dump_20190311.json mod pipe`
   
