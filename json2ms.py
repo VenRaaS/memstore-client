@@ -12,7 +12,7 @@ from multiprocessing import Pool, Value
 from distutils.version import StrictVersion
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
+logging.basicConfig(filename='/home/itri/memstore-client/json2ms.log', level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = 'ms-node-01'
@@ -98,6 +98,9 @@ def rds_pipe_worker(tuple_list):
                 logging.warn('redis is busy, wait a second to retry ...')
                 time.sleep(10)
                 wait_sec += 10
+            elif 'oom command not allowed when used memory' in str(e).lower():
+                logging.error(e)
+                sys.exit()
 
         except KeyboardInterrupt as e:
             logging.error(e, exc_info=True)
