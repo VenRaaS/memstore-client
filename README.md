@@ -98,6 +98,7 @@ Evicts the keys with the shortest TTL whenever redis instance memory is full.
     * del keys by specific pattern  
       `redis-cli -h ${HOST} --scan --pattern '*_mod*' | xargs redis-cli  -h ${HOST} del`   
       `redis-cli -h ${HOST} --scan --pattern '*_mod*' | xargs redis-cli  -h ${HOST} unlink` 
+      `redis-cli -h ${HOST} --scan --pattern '*_opp*' | sed 's/""|/|/g' | xargs redis-cli  -h ${HOST} del`
   * [FLUSHALL](https://redis.io/commands/flushall)
   
 * [Lists](https://redis.io/topics/data-types#lists) - [Redis lists are implemented via Linked Lists](https://redis.io/topics/data-types-intro#redis-lists)
