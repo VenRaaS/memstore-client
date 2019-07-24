@@ -286,17 +286,17 @@ def weblog_parser(args, fn, linebase, lines):
                         rdscmds.append((RedisCommand.expire, k, args.ttl))
 
                     #-- cartadd 
-                    if 'cartadd' == act and 'ven_guid' in js \
-                        and 'gid' in js and 'categ_code' in js \
-                        and js['gid'] and js['categ_code']:
-                        k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                    #if 'cartadd' == act and 'ven_guid' in js \
+                    #    and 'gid' in js and 'categ_code' in js \
+                    #    and js['gid'] and js['categ_code']:
+                    #    k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
+                    #    k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                    #    v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                    #    v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
-                        rdscmds.append((RedisCommand.lpush, k, v))
-                        rdscmds.append((RedisCommand.ltrim, k, 0, 60))
-                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+                    #    rdscmds.append((RedisCommand.lpush, k, v))
+                    #    rdscmds.append((RedisCommand.ltrim, k, 0, 60))
+                    #    rdscmds.append((RedisCommand.expire, k, args.ttl))
 
                     #-- checkout
                     if 'checkout' == act \
