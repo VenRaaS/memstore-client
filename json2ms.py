@@ -14,7 +14,7 @@ from multiprocessing import Pool, Value
 from distutils.version import StrictVersion
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
+#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
 HOST_RDS = 'ms-node-01'
@@ -90,22 +90,22 @@ def rds_pipe_worker(tuple_list):
 
                 resp_list = pipe.execute()
                 if IS_PYTHON_LE_VER27:
-                    logging.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
+                    logger.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
                 else:
-                    logging.info('pipelining {num} rows'.format(num=len(tuple_list)))
+                    logger.info('pipelining {num} rows'.format(num=len(tuple_list)))
                 retry_sec = 0
 
         except redis.ResponseError as e:
             if 'redis is busy running a script' in str(e).lower():
-                logging.warn('redis is busy, wait a second to retry ...')
+                logger.warn('redis is busy, wait a second to retry ...')
                 time.sleep(10)
                 wait_sec += 10
             elif 'oom command not allowed when used memory' in str(e).lower():
-                logging.error(e)
+                logger.error(e)
                 sys.exit()
 
         except KeyboardInterrupt as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             retry_sec = 0
 
     return resp_list
@@ -132,7 +132,7 @@ def tail_file(args, parser_cbf, seconds_sleep=3):
                     parser_cbf(args, fname, 0, lines)
 
                 if not lines:
-                    logging.info('EOF')
+                    logger.info('EOF')
                     time.sleep(seconds_sleep)
                     break
 
@@ -143,12 +143,12 @@ def tail_file(args, parser_cbf, seconds_sleep=3):
                     new_f = open(fname, 'r')
                     cur_f = new_f 
                     cur_ino = os.fstat(cur_f.fileno()).st_ino
-                    logging.info('{0} inode changed, reopen the file'.format(fname))
+                    logger.info('{0} inode changed, reopen the file'.format(fname))
             except IOError as e:
-                logging.error(e)
+                logger.error(e)
 
     except KeyboardInterrupt as e:
-        logging.error(e, exc_info=True)
+        logger.error(e, exc_info=True)
 
     finally:
         if not cur_f.closed:
@@ -169,19 +169,19 @@ def pipe_file(args, parser_cbf):
                 if s:
                     s_new = new_state_files.get_state(fn)
                     if s_new['ino'] == s['ino'] and s_new['md5'] == s['md5']:
-                        logging.info('{n} has not change detected'.format(n=fn))
+                        logger.info('{n} has not change detected'.format(n=fn))
                         continue
 
-            logging.info('{fn} counting ...'.format(fn=fn))
+            logger.info('{fn} counting ...'.format(fn=fn))
             linnum_src = 0.0
             with open(fn, 'r') as f:
                 for i, l in enumerate(f, 1):
                     linnum_src = i
                     pass
             if IS_PYTHON_LE_VER27:
-                logging.info('{fn} has {lnum:,.0f} records'.format(fn=fn, lnum=linnum_src))
+                logger.info('{fn} has {lnum:,.0f} records'.format(fn=fn, lnum=linnum_src))
             else:
-                logging.info('{fn} has {lnum} records'.format(fn=fn, lnum=linnum_src))
+                logger.info('{fn} has {lnum} records'.format(fn=fn, lnum=linnum_src))
             
             with open(fn, 'r') as f:
                 linenum = 0.0
@@ -194,9 +194,9 @@ def pipe_file(args, parser_cbf):
 
                     linenum += len(lines)
                     if IS_PYTHON_LE_VER27:
-                        logging.info('{lnum:,.0f} {pct:,.0f}%'.format(lnum=linenum, pct=linenum / linnum_src * 100))
+                        logger.info('{lnum:,.0f} {pct:,.0f}%'.format(lnum=linenum, pct=linenum / linnum_src * 100))
                     else:
-                        logging.info('{lnum} {pct}%'.format(lnum=linenum, pct=round(linenum / linnum_src * 100,1)))
+                        logger.info('{lnum} {pct}%'.format(lnum=linenum, pct=round(linenum / linnum_src * 100,1)))
 
         if not args.deamon:
             break
@@ -219,19 +219,19 @@ def weblog_parser(args, fn, linebase, lines):
             elif 3 == len(cols):
                 js = json.loads(cols[-1])
                 if 'logbody' not in js:
-                    logging.error('invalid td-weblog due to lack of key "{k}"'.format(k='logbody'))
+                    logger.error('invalid td-weblog due to lack of key "{k}"'.format(k='logbody'))
                     continue
                 js = json.loads(js['logbody'])
             else:
-                logging.error('invalid weblog due to unknown format')
+                logger.error('invalid weblog due to unknown format')
                 continue         
 
             #-- js, log content with venapis form
             if args.c not in js or not js[args.c]:
-                logging.error('invalid weblog due to lack of key "{k}"'.format(k=args.c))
+                logger.error('invalid weblog due to lack of key "{k}"'.format(k=args.c))
                 continue
             if 'api_logtime' not in js or not js ['api_logtime']:
-                logging.error('invalid weblog due to lack of key "{k}"'.format(k='api_logtime'))
+                logger.error('invalid weblog due to lack of key "{k}"'.format(k='api_logtime'))
                 continue
 
             act = None
@@ -260,7 +260,7 @@ def weblog_parser(args, fn, linebase, lines):
                             rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
                         else:
-                            logging.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
+                            logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
                         k = ['{c}_oua'.format(c=cn), 'uid2guids', js['uid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
@@ -272,7 +272,7 @@ def weblog_parser(args, fn, linebase, lines):
                             rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
                         else:
-                            logging.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
+                            logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
                     #-- opp 
                     if 'pageload' == act and 'ven_guid' in js \
@@ -331,7 +331,7 @@ def weblog_parser(args, fn, linebase, lines):
 
         rds_pipe_worker(tuple_list)
     except Exception as e:
-        logging.error(e, exc_info=True)
+        logger.error(e, exc_info=True)
 
 
 def goccmod_parser(args, fn, linebase, lines):
@@ -346,7 +346,7 @@ def goccmod_parser(args, fn, linebase, lines):
     if m:
         date = m.group(0)
     else:
-        logging.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
+        logger.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
         return
                     
     tuple_list = []
@@ -355,19 +355,19 @@ def goccmod_parser(args, fn, linebase, lines):
             j = json.loads(l)
 
             if not jkey_c in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
                 continue
             if not jkey_t in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
                 continue
             if not jkey_k in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
                 continue
 
             if jkeys_vals:
                 for valkey in jkeys_vals:
                     if not valkey in j:
-                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
+                        logger.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
@@ -378,7 +378,7 @@ def goccmod_parser(args, fn, linebase, lines):
             if jkeys_vals:
                 for vk in jkeys_vals:
                     if vk not in j:
-                        logging.error('key:{vkey} does not in json'.format(vkey=vk))
+                        logger.error('key:{vkey} does not in json'.format(vkey=vk))
                         continue
 
                     if args.lowercase_key:
@@ -398,7 +398,7 @@ def goccmod_parser(args, fn, linebase, lines):
             #-- add data to sorted set
             else:
                 if args.datetimekey not in j:
-                    logging.error('args.datetimekey is not found at line:{} in {}'.format(linenum+linebase, fn))
+                    logger.error('args.datetimekey is not found at line:{} in {}'.format(linenum+linebase, fn))
                     continue
 
                 # extract YYYYMMDD as score
@@ -411,7 +411,7 @@ def goccmod_parser(args, fn, linebase, lines):
 
             tuple_list.append((args, rdscmds))
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
 
     rds_pipe_worker(tuple_list)
 
@@ -428,7 +428,7 @@ def update_goods_parser(args, fn, linebase, lines):
     if m:
         date = m.group(0)
     else:
-        logging.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
+        logger.error('DATE pattern (%Y%m%d) is not found from filename: {fn}'.format(fn=fn))
         return
                   
     #-- get keys from update json file   
@@ -438,19 +438,19 @@ def update_goods_parser(args, fn, linebase, lines):
             j = json.loads(l)
 
             if not jkey_c in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_c, linenum+linebase, fn))
                 continue
             if not jkey_t in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_t, linenum+linebase, fn))
                 continue
             if not jkey_k in j:
-                logging.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
+                logger.error('{} is not found at line:{} in {}'.format(jkey_k, linenum+linebase, fn))
                 continue
 
             if jkeys_vals:
                 for valkey in jkeys_vals:
                     if not valkey in j:
-                        logging.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
+                        logger.error('{k}, {vk} is not found at line:{ln} in {fn}'.format(k=j[jkey_k], vk=valkey, ln=linenum+linebase, fn=fn))
                         continue
 
             idkey = jkey_k.lower() if args.lowercase_key else jkey_k
@@ -462,7 +462,7 @@ def update_goods_parser(args, fn, linebase, lines):
 
             tuple_list.append((args, rdscmds))
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
 
     #-- get goods info list from ms 
     msGoods_dic = {} 
@@ -493,7 +493,7 @@ def update_goods_parser(args, fn, linebase, lines):
             isValid = True
             for vk in jkeys_vals:
                 if vk not in update_j:
-                    logging.error('{gid}, key [{vkey}] does not in update json'.format(gid=gid, vkey=vk))
+                    logger.error('{gid}, key [{vkey}] does not in update json'.format(gid=gid, vkey=vk))
                     isValid = False
                     break
 
@@ -531,10 +531,10 @@ def pipe_sync_file(args):
         jkey_t = args.t
         jkey_k = args.k
         jkeys_vals = args.valkeys
-        logging.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
-        logging.info('value key: {0}'.format(jkeys_vals))
-        logging.info('ttl: {0}'.format(args.ttl))
-        logging.info('deamon mode: {0}'.format(args.deamon))
+        logger.info('combo key: ${0}.${1}.${2}'.format(jkey_c, jkey_t, jkey_k))
+        logger.info('value key: {0}'.format(jkeys_vals))
+        logger.info('ttl: {0}'.format(args.ttl))
+        logger.info('deamon mode: {0}'.format(args.deamon))
         pipe_file(args, goccmod_parser)
 
     elif IndexCategory.weblog == args.index_cat:
@@ -546,12 +546,12 @@ def pipe_sync_file(args):
 
 class FilesState:
     def __init__(self, fpattern, dohash=False):
-        logging.info('find all pathnames matching pattern \"{p}\" ...'.format(p=fpattern))
+        logger.info('find all pathnames matching pattern \"{p}\" ...'.format(p=fpattern))
         self.fnames = sorted(glob.glob(fpattern))
         self.fname2state = {}
 
         for fn in self.fnames:
-            logging.info('collecting {n} state ...'.format(n=fn))
+            logger.info('collecting {n} state ...'.format(n=fn))
             self.fname2state[fn] = {}
             self.fname2state[fn]['ino'] = os.stat(fn).st_ino
             self.fname2state[fn]['mtime'] = os.stat(fn).st_mtime
@@ -627,7 +627,7 @@ if '__main__' == __name__:
     args = parser.parse_args()
 
     if args.datetimekey:
-        logging.warn('--datetimekey, the argument will cause data to be added into Sorted Set, i.e. zadd')
+        logger.warn('--datetimekey, the argument will cause data to be added into Sorted Set, i.e. zadd')
 
     if args.deamon:
         try:
@@ -639,7 +639,7 @@ if '__main__' == __name__:
             if 0 != pid:
                 sys.exit(0)
         except OSError as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
  
 #    print args
     args.func(args)
