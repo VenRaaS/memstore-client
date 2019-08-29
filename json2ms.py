@@ -1,5 +1,7 @@
 import os, sys, time 
 import logging
+import logging.config
+from logging.handlers import RotatingFileHandler
 import argparse
 import json
 import redis
@@ -591,6 +593,13 @@ class RedisCommand(Enum):
 
 
 if '__main__' == __name__:
+
+    pwd_dir = os.path.dirname(os.path.realpath(__file__))
+    log_dir = os.path.join(pwd_dir, 'log')
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+    logging.config.fileConfig('logging.conf')
+    logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
     parser.add_argument('index_cat', type=IndexCategory, choices=list(IndexCategory), help="index category")
