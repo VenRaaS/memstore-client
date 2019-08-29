@@ -89,10 +89,10 @@ def rds_pipe_worker(tuple_list):
                             pipe.zremrangebyrank(k, start, stop)
 
                 resp_list = pipe.execute()
-                #if IS_PYTHON_LE_VER27:
-                    #logging.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
-                #else:
-                    #logging.info('pipelining {num} rows'.format(num=len(tuple_list)))
+                if IS_PYTHON_LE_VER27:
+                    logging.info('pipelining {num:,} rows'.format(num=len(tuple_list)))
+                else:
+                    logging.info('pipelining {num} rows'.format(num=len(tuple_list)))
                 retry_sec = 0
 
         except redis.ResponseError as e:
