@@ -248,6 +248,7 @@ def weblog_parser(args, fn, linebase, lines):
                     act = k
                     js = json.loads(v[0])
                     
+                    ## in case, missing 'ven_guid' key in json, use cc_guid equal ven_guid
                     if not 'ven_guid' in js and not js['cc_guid']:
                         js['ven_guid'] = js['cc_guid']
                     
