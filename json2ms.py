@@ -248,6 +248,9 @@ def weblog_parser(args, fn, linebase, lines):
                     act = k
                     js = json.loads(v[0])
                     
+                    if not 'ven_guid' in js and not js['cc_guid']:
+                        js['ven_guid'] = js['cc_guid']
+                    
                     #-- oua
                     if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
                         k = ['{c}_oua'.format(c=cn), 'guid2uid', js['ven_guid']]
