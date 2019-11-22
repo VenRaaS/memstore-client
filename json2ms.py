@@ -17,7 +17,7 @@ from distutils.version import StrictVersion
 #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
-HOST_RDS = 'ms-node-01'
+HOST_RDS = os.getenv('HOST_RDS', "ms-node-01")
 PORT_RDS = '6379'
 TIMEOUT_IN_SEC = 1
 rds = redis.StrictRedis(host=HOST_RDS, port=6379, socket_connect_timeout=TIMEOUT_IN_SEC)
@@ -249,7 +249,7 @@ def weblog_parser(args, fn, linebase, lines):
                     js = json.loads(v[0])
                     
                     ## in case, missing 'ven_guid' key in json, use cc_guid equal ven_guid
-                    if not 'ven_guid' in js and not js['cc_guid']:
+                    if not 'ven_guid' in js and js['cc_guid']:
                         js['ven_guid'] = js['cc_guid']
                     
                     #-- oua
