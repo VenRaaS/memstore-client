@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import os, sys, time 
 import logging
 import logging.config
@@ -237,7 +238,7 @@ def weblog_parser(args, fn, linebase, lines):
             act = None
             cn = js[args.c][0]
             logdt = js['api_logtime'][0][:19]
-
+            
             rdscmds = []
             #-- iter k, v, e.g. "code_name":[...], "agent":[...], "api_logtime":[...], ...
             for k, v in js.iteritems() if hasattr(js, 'iteritems') else js.items():
@@ -247,7 +248,6 @@ def weblog_parser(args, fn, linebase, lines):
                      and k in v[0]:
                     act = k
                     js = json.loads(v[0])
-                    
                     ## in case, missing 'ven_guid' key in json, use cc_guid equal ven_guid
                     if not 'ven_guid' in js and js['cc_guid']:
                         js['ven_guid'] = js['cc_guid']
@@ -285,6 +285,19 @@ def weblog_parser(args, fn, linebase, lines):
                         k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
                         k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
                         v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+
+                        rdscmds.append((RedisCommand.lpush, k, v))
+                        rdscmds.append((RedisCommand.ltrim, k, 0, 60))
+                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+
+                    #-- user_prefer_goods
+                    if 'user_prefer_goods' == act  and 'uid' in js \
+                        and 'gid' in js  \
+                        and js['gid'] and js['uid']:
+                        k = ['{c}_opp'.format(c=cn), act, js['uid']]
+                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                        v_obj = {'gid':js['gid'], 'w_list_type':js['w_list_type'], 'insert_dt':logdt}
                         v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
                         rdscmds.append((RedisCommand.lpush, k, v))
