@@ -615,7 +615,7 @@ if '__main__' == __name__:
     log_dir = os.path.join(pwd_dir, 'log')
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
-    logging.config.fileConfig(os.path.join('/home/itri/memstore-client','logging.conf'))
+    logging.config.fileConfig(os.path.join(pwd_dir,'logging.conf'))
     logger = logging.getLogger(__name__)
     parser = argparse.ArgumentParser()
     parser.add_argument("src_fp", help="source file path")
