@@ -18,7 +18,7 @@ from distutils.version import StrictVersion
 #logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(filename)s:%(lineno)d [%(levelname)s] %(message)s', datefmt='%Y-%m-%d %I:%M:%S')
 
 #-- redis-py, see https://github.com/andymccurdy/redis-py
-HOST_RDS = os.getenv('HOST_RDS', "ms-node-01")
+HOST_RDS = os.getenv('HOST_RDS', "ms-node-01.venraas.private")
 PORT_RDS = '6379'
 TIMEOUT_IN_SEC = 1
 rds = redis.StrictRedis(host=HOST_RDS, port=6379, socket_connect_timeout=TIMEOUT_IN_SEC)
