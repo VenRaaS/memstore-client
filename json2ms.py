@@ -346,9 +346,9 @@ def weblog_parser(args, fn, linebase, lines):
 
                         if 0 < len(rdscmds):
                             tuple_list.append( (args, rdscmds) )
-            except Esxception as e:
-                logger.warn(("iteritems=",k,v))
-                logger.error(e, exc_info=True)
+                except Exception as e:
+                    logger.warn(("iteritems=",k,v))
+                    logger.error(e, exc_info=True)
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logger.error(e, exc_info=True)
