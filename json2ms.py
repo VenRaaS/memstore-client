@@ -242,110 +242,113 @@ def weblog_parser(args, fn, linebase, lines):
             rdscmds = []
             #-- iter k, v, e.g. "code_name":[...], "agent":[...], "api_logtime":[...], ...
             for k, v in js.iteritems() if hasattr(js, 'iteritems') else js.items():
-                #-- find action content payload, e.g. "pageload":["{...}"]
-                if 0 < len(v) \
-                     and (isinstance(v[0], str) or isinstance(v[0], unicode)) \
-                     and k in v[0]:
-                    act = k
-                    js = json.loads(v[0])
-                    ## in case, missing 'ven_guid' key in json, use cc_guid equal ven_guid
-                    if not 'ven_guid' in js and js['cc_guid']:
-                        js['ven_guid'] = js['cc_guid']
-                    
-                    #-- oua
-                    if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
-                        k = ['{c}_oua'.format(c=cn), 'guid2uid', js['ven_guid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'uid':js['uid']}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        if logdt:
-                            score = float(re.sub('[- :T]', '', logdt)[:14])
-                            rdscmds.append((RedisCommand.zadd, k, score, v))
-                            rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                try:
+                    #-- find action content payload, e.g. "pageload":["{...}"]
+                    if 0 < len(v) \
+                        and (isinstance(v[0], str) or isinstance(v[0], unicode)) \
+                        and k in v[0]:
+                        act = k
+                        js = json.loads(v[0])
+                        ## in case, missing 'ven_guid' key in json, use cc_guid equal ven_guid
+                        if not 'ven_guid' in js and js['cc_guid']:
+                            js['ven_guid'] = js['cc_guid']
+                        
+                        #-- oua
+                        if 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
+                            k = ['{c}_oua'.format(c=cn), 'guid2uid', js['ven_guid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'uid':js['uid']}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            if logdt:
+                                score = float(re.sub('[- :T]', '', logdt)[:14])
+                                rdscmds.append((RedisCommand.zadd, k, score, v))
+                                rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                                rdscmds.append((RedisCommand.expire, k, args.ttl))
+                            else:
+                                logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
+
+                            k = ['{c}_oua'.format(c=cn), 'uid2guids', js['uid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'ven_guid':js['ven_guid']}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            if logdt:
+                                score = float(re.sub('[- :T]', '', logdt)[:14])
+                                rdscmds.append((RedisCommand.zadd, k, score, v))
+                                rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                                rdscmds.append((RedisCommand.expire, k, args.ttl))
+                            else:
+                                logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
+
+                        #-- opp 
+                        if 'pageload' == act and 'ven_guid' in js \
+                            and 'gid' in js and 'categ_code' in js \
+                            and js['gid'] and js['categ_code']:
+                            k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+
+                            rdscmds.append((RedisCommand.lpush, k, v))
+                            rdscmds.append((RedisCommand.ltrim, k, 0, 60))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
-                        else:
-                            logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
-                        k = ['{c}_oua'.format(c=cn), 'uid2guids', js['uid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'ven_guid':js['ven_guid']}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        if logdt:
-                            score = float(re.sub('[- :T]', '', logdt)[:14])
-                            rdscmds.append((RedisCommand.zadd, k, score, v))
-                            rdscmds.append((RedisCommand.zremrangebyrank, k, 0, -6))
+                        #-- user_prefer_goods
+                        if 'user_prefer_goods' == act  and 'uid' in js \
+                            and 'gid' in js  \
+                            and js['gid'] and js['uid']:
+                            k = ['{c}_opp'.format(c=cn), act, js['uid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'gid':js['gid'], 'w_list_type':js['w_list_type'], 'insert_dt':logdt}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+
+                            rdscmds.append((RedisCommand.lpush, k, v))
+                            rdscmds.append((RedisCommand.ltrim, k, 0, 60))
                             rdscmds.append((RedisCommand.expire, k, args.ttl))
-                        else:
-                            logger.error('{} is not found at line:{} in {}'.format('logdt', linenum+linebase, fn))
 
-                    #-- opp 
-                    if 'pageload' == act and 'ven_guid' in js \
-                        and 'gid' in js and 'categ_code' in js \
-                        and js['gid'] and js['categ_code']:
-                        k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                        #-- cartadd 
+                        #if 'cartadd' == act and 'ven_guid' in js \
+                        #    and 'gid' in js and 'categ_code' in js \
+                        #    and js['gid'] and js['categ_code']:
+                        #    k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
+                        #    k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                        #    v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
+                        #    v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
-                        rdscmds.append((RedisCommand.lpush, k, v))
-                        rdscmds.append((RedisCommand.ltrim, k, 0, 60))
-                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+                        #    rdscmds.append((RedisCommand.lpush, k, v))
+                        #    rdscmds.append((RedisCommand.ltrim, k, 0, 60))
+                        #    rdscmds.append((RedisCommand.expire, k, args.ttl))
 
-                    #-- user_prefer_goods
-                    if 'user_prefer_goods' == act  and 'uid' in js \
-                        and 'gid' in js  \
-                        and js['gid'] and js['uid']:
-                        k = ['{c}_opp'.format(c=cn), act, js['uid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'gid':js['gid'], 'w_list_type':js['w_list_type'], 'insert_dt':logdt}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                        #-- checkout
+                        if 'checkout' == act \
+                            and 'trans_i' in js and js['trans_i'] \
+                            and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
+                            k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'trans_i':js['trans_i'], 'insert_dt':logdt}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
-                        rdscmds.append((RedisCommand.lpush, k, v))
-                        rdscmds.append((RedisCommand.ltrim, k, 0, 60))
-                        rdscmds.append((RedisCommand.expire, k, args.ttl))
+                            rdscmds.append((RedisCommand.lpush, k, v))
+                            rdscmds.append((RedisCommand.ltrim, k, 0, 10))
+                            rdscmds.append((RedisCommand.expire, k, args.ttl))
 
-                    #-- cartadd 
-                    #if 'cartadd' == act and 'ven_guid' in js \
-                    #    and 'gid' in js and 'categ_code' in js \
-                    #    and js['gid'] and js['categ_code']:
-                    #    k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
-                    #    k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                    #    v_obj = {'gid':js['gid'], 'category_code':js['categ_code'], 'insert_dt':logdt}
-                    #    v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                        #-- unfavadd
+                        if 'unfavadd' == act \
+                            and 'ven_guid' in js and 'gid' in js \
+                            and js['ven_guid'] and js['gid']:
+                            k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
+                            k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
+                            v_obj = {'gid':js['gid'], 'insert_dt':logdt}
+                            v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
 
-                    #    rdscmds.append((RedisCommand.lpush, k, v))
-                    #    rdscmds.append((RedisCommand.ltrim, k, 0, 60))
-                    #    rdscmds.append((RedisCommand.expire, k, args.ttl))
+                            rdscmds.append((RedisCommand.lpush, k, v))
+                            rdscmds.append((RedisCommand.ltrim, k, 0, 20))
+                            rdscmds.append((RedisCommand.expire, k, args.ttl))
 
-                    #-- checkout
-                    if 'checkout' == act \
-                        and 'trans_i' in js and js['trans_i'] \
-                        and 'ven_guid' in js and 'uid' in js and js['ven_guid'] and js['uid']:
-                        k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'trans_i':js['trans_i'], 'insert_dt':logdt}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-
-                        rdscmds.append((RedisCommand.lpush, k, v))
-                        rdscmds.append((RedisCommand.ltrim, k, 0, 10))
-                        rdscmds.append((RedisCommand.expire, k, args.ttl))
-
-                    #-- unfavadd
-                    if 'unfavadd' == act \
-                        and 'ven_guid' in js and 'gid' in js \
-                        and js['ven_guid'] and js['gid']:
-                        k = ['{c}_opp'.format(c=cn), act, js['ven_guid']]
-                        k = json.dumps(k, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-                        v_obj = {'gid':js['gid'], 'insert_dt':logdt}
-                        v = json.dumps(v_obj, separators=(',', ':'), ensure_ascii=False).encode('utf8')
-
-                        rdscmds.append((RedisCommand.lpush, k, v))
-                        rdscmds.append((RedisCommand.ltrim, k, 0, 20))
-                        rdscmds.append((RedisCommand.expire, k, args.ttl))
-
-                    if 0 < len(rdscmds):
-                        tuple_list.append( (args, rdscmds) )
-
+                        if 0 < len(rdscmds):
+                            tuple_list.append( (args, rdscmds) )
+            except Esxception as e:
+                logger.warn(("iteritems=",k,v))
+                logger.error(e, exc_info=True)
         rds_pipe_worker(tuple_list)
     except Exception as e:
         logger.error(e, exc_info=True)
